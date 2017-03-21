@@ -1,0 +1,78 @@
+= overview = 
+
+simu_p.C to generate events in root tree
+
+accept.C to add acceptance entry in tree
+
+other scripts to analysis results
+
+= how it works =
+1. simu_p.C
+
+compile it (an example on ifarm, with tsch)
+source /apps/root/5.34.21/setroot_CUE.csh
+make O=simu_p
+
+run by
+./simu_p -n[nevents as integer like 1000000] -t[e for electroproduction,g for photoproduction] -b[Ebeam in GeV] -o[output_root_file]
+for example
+./simu_p -n1e6 -te -b11 -ooutput.root
+
+refer to PAC39 proposal for the crossection formula
+
+electroproduction
+scattered electon p,theta,phi and recoil proton theta, phi, decay angle theta and phi are degree of freedom
+special Jacob J
+special decay distribution
+
+(***unfinished!!!!!!!****) photoproduction (by bremstrlung from a fix energy electron beam on a radiator)
+Gbeam,recoil proton theta, phi,decay angle theta and phi are degree of freedom
+decay angle theta and phi are two addtionl degree of freedom,but are handled differently by  weight_decay integrated to 4pi
+special Jacob J
+special decay distribution
+
+The similation throw events evenly in the ranges of the all degree of freedom and only keep the events with right kinematics 
+
+"phasespace" is the total phasespace
+"weight" is for weighting (0 or 0.5 or 1) of two possible kinematic solutions of proton mom
+"weight_decay" is for JPsi decay weight
+"dxs*" three crossection models, t-channel "dxs", 2g model "dxs_2g", "dxs_23g", in unit nb/GeV2
+"neve" the thrown number of events while only events passing kinematics are recorded which ouput until the number of events defined in command line option
+
+output root file has a tree "T"
+
+2. accep.C
+root [0] .x accep.C+("output.root","acceptance_solid_JPsi_electron_target315_output.root")
+it will take the output root file from simu_p and add acceptance entries.
+acceptance can be read from acceptance root file which are just histograms from simulation code or some rough cut estimation
+
+3. others
+proj.C
+root [0] .x proj.C("output_accep.root","e")
+plots results, output total events on terminal
+
+plot_crossection.C
+plot photon crossection fit function, matching paper "Brodsky Physics Letters B 498 (2001) 23¨C28" Fig 3
+
+plot_brem.C
+
+compare.C 
+compare total detected events (as FOM) from different simulation files.
+
+plot_acceptance.C
+compare acceptance from different simulation files
+
+= history =
+
+current code is based on Xin's code with changes
+1. correct a bug to have +Q2 in definition of R which is related to JPsi decay only
+2. modify to read acceptance root file from code "acceptance" with SoLID GEMC
+
+Xin Qian's code used for PAC39 proposal in dir "forzhiwen"
+
+Xin Qian's very early code in dir "xqian" which has only t-channel model and different way to handle decay etc
+
+accep.root is for acceptance from Geant3 with BaBar made by Xin and used for PAC39 proposal
+
+
+
