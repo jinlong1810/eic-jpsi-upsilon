@@ -1,0 +1,123 @@
+*Br    0 :Ebeam     : data/D                                                 *
+= Electron beam energy
+
+---
+Only used in 'photoproduction' mode ("g"):
+
+*Br    1 :Gbeam     : data/D                                                 *
+= Sampled photon energy from frunction fbr:
+TF1 *fbr = new TF1("fbr","[1]/(x/[0])*(4./3.-4./3.*(x/[0])+(x/[0])*(x/[0]))",Gbeam_min,Ebeam);
+  fbr->SetParameter(0,Ebeam);
+  fbr->SetParameter(1,0.00243);
+Gbeam = fbr->GetRandom();
+
+*Br    2 :Gflux     : data/D                                                 *
+= ? Determined from Gbeam via function fbr;
+Gflux = fbr->Eval(Gbeam);
+
+---
+
+*Br    3 :weight_decay : data/D                                              *
+= ?
+
+*Br    4 :weight    : data/D                                                 *
+= ?
+
+*Br    5 :Q2        : data/D                                                 *
+= Q2 = -pq->M2();
+where (electron-mode): *pq = *pBeam - *p4_ep , and: pBeam->SetPxPyPzE(0.,0.,Ebeam,sqrt(Ebeam*Ebeam+mass_e*mass_e));
+where (photon-mode): *pq = *pBeam , and: pBeam->SetPxPyPzE(0.,0.,Gbeam,Gbeam);
+
+*Br    6 :t         : data/D                                                 *
+= t = -pt->M2();
+where (electron mode):  *pt = *p4_recoil - *pTarget;
+where (photon mode):    *pt = *p4_recoil - *pTarget;
+
+*Br    7 :p_e       : data/D                                                 *
+*Br    8 :theta_e   : data/D                                                 *
+*Br    9 :phi_e     : data/D                                                 *
+= random selection of electron momentum p (range 0-5) and angles theta (cos(theta) (-1)-1) and phi (0-2Pi)
+
+*Br   10 :p_p       : data/D                                                 *
+*Br   11 :theta_p   : data/D                                                 *
+*Br   12 :phi_p     : data/D                                                 *
+= calculated recoil proton momentum, theta, phi
+
+*Br   13 :p_jpsi    : data/D                                                 *
+*Br   14 :theta_jpsi : data/D                                                *
+*Br   15 :phi_jpsi  : data/D                                                 *
+= ? J/Psi momentum and angles?
+
+*Br   16 :p_je1     : data/D                                                 *
+*Br   17 :theta_je1 : data/D                                                 *
+*Br   18 :phi_je1   : data/D                                                 *
+= momentum p and angles theta, phi for first electron from J/Psi decay, calculated by TGenPhaseSpace
+
+*Br   19 :p_je2     : data/D                                                 *
+*Br   20 :theta_je2 : data/D                                                 *
+*Br   21 :phi_je2   : data/D                                                 *
+= momentum p and angles theta, phi for first electron from J/Psi decay, calculated by TGenPhaseSpace
+
+*Br   22 :neve      : data/I                                                 *
+= count calls of while(qflag), i.e. calls to randomly selected electron momentum and angles (tree only filled if selected parameters pass
+a list of checks)
+
+---
+The following are connected:
+
+*Br   30 :R         : data/D                                                 *
+= R = pow((a*mass_jpsi*mass_jpsi+Q2)/(a*mass_jpsi*mass_jpsi),n) -1;
+//R defination and parameter a and n are from eq 18 of "R. Fiore et al. Exclusive Jpsi electroproduction in a dual model. Phys. \
+Rev.,D80:116001, 2009"
+
+*Br   28 :theta_q   : data/D                                                 *
+= theta_q = pq->Theta()*DEG;
+
+*Br   27 :q         : data/D                                                 *
+= q = pq->P();
+
+*Br   26 :W         : data/D                                                 *
+= W = sqrt(pow(mass_p + pq->E(),2)-pow(pq->P(),2));
+
+*Br   25 :Keq       : data/D                                                 *
+= Keq = (W*W-mass_p*mass_p)/2./mass_p;
+
+*Br   24 :epsilon   : data/D                                                 *
+= epsilon = 1./(1+2*q*q/Q2*pow(tan(theta_e/DEG/2.),2));
+
+*Br   23 :Gamma     : data/D                                                 *
+= Gamma = alpha/2./3.1415926/3.1415926*p_e/Ebeam*Keq/Q2/(1.-epsilon);
+
+*Br   33 :r         : data/D                                                 *
+= r = epsilon*R/(1.+epsilon*R);
+
+---
+
+*Br   29 :J         : data/D                                                 *
+= J = 2 * mass_p * dEpdcp;
+where: Double_t dEpdcp=fabs((ps1->Pz()-(ps1->Px()*cos(phi_p/DEG)+ps1->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+c\
+c*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
+
+*Br   31 :theta_cm  : data/D                                                 *
+= ?
+
+*Br   32 :phi_cm    : data/D                                                 *
+= ?
+
+*Br   34 :dxs       : data/D                                                 *
+= ?
+
+*Br   35 :dxs_2g    : data/D                                                 *
+= ?
+
+*Br   36 :dxs_23g   : data/D                                                 *
+= ?
+
+*Br   37 :tmin      : data/D                                                 *
+= tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_jpsi, mass_p, ps2->M2());
+
+*Br   38 :tmax      : data/D                                                 *
+= tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_jpsi, mass_p, ps2->M2());
+
+*Br   39 :phasespace : data/D                                                *
+= ?
