@@ -77,7 +77,8 @@ int main (Int_t argc, char *argv[])
   //       }
   //     }
   Int_t nevents=1000000; //number of events
-  Double_t Ebeam=11.0; // Beam Energy
+  Double_t Ebeam=11.0; // Electron Beam Energy
+  Double_t Pbeam=0.0; // Proton Beam Energy
   TString output_root_file("output.root");
   string type;
   string acceptance_root_file="no";
@@ -102,6 +103,9 @@ int main (Int_t argc, char *argv[])
       case 'b':
         Ebeam = atof(&argv[i][2]);
         break;
+      case 'p':
+        Pbeam = atof(&argv[i][2]);
+        break;
       case 'o':
         output_root_file = TString(argv[i][2]);
         break;
@@ -114,8 +118,8 @@ int main (Int_t argc, char *argv[])
 
     double Gbeam_min=7.5;
 
-    if (Is_e)  cout << "Ebeam " << Ebeam << " GeV" << endl;
-    else if (Is_g) cout << "Gbeam " << Gbeam_min << " - " << Ebeam << " GeV" << endl;
+    if (Is_e)  cout << "Ebeam " << Ebeam << " GeV, Pbeam " << Pbeam << " GeV" << endl;
+    else if (Is_g) cout << "Gbeam " << Gbeam_min << " - " << Ebeam << " GeV, Pbeam " << Pbeam << " GeV" << endl;
 
     TF1 *fbr = new TF1("fbr","[1]/(x/[0])*(4./3.-4./3.*(x/[0])+(x/[0])*(x/[0]))",Gbeam_min,Ebeam);
     fbr->SetParameter(0,Ebeam);
@@ -167,6 +171,7 @@ int main (Int_t argc, char *argv[])
     T->Branch("Ebeam",&Ebeam,"data/D");
     T->Branch("Gbeam",&Gbeam,"data/D");
     T->Branch("Gflux",&Gflux,"data/D");
+    T->Branch("Pbeam",&Pbeam,"data/D");
 
     Double_t Q2,t;
 
@@ -274,7 +279,7 @@ int main (Int_t argc, char *argv[])
         p4_ep->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
 
         pBeam->SetPxPyPzE(0.,0.,Ebeam,sqrt(Ebeam*Ebeam+mass_e*mass_e));
-        pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
+        pTarget->SetPxPyPzE(0.,0.,-Pbeam,sqrt(Pbeam*Pbeam+mass_p*mass_p));
         *ps = *pBeam + *pTarget;
 
         *pq = *pBeam - *p4_ep;
@@ -450,7 +455,7 @@ int main (Int_t argc, char *argv[])
         //       cout << Gbeam << " " << Gflux << endl;
 
         pBeam->SetPxPyPzE(0.,0.,Gbeam,Gbeam);
-        pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
+        pTarget->SetPxPyPzE(0.,0.,-Pbeam,sqrt(Pbeam*Pbeam+mass_p*mass_p));
 
         *ps = *pBeam + *pTarget;
 
