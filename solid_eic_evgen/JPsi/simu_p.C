@@ -78,7 +78,7 @@ int main (Int_t argc, char *argv[])
   //     }
   Int_t nevents=1000000; //number of events
   Double_t Ebeam=11.0; // Beam Energy
-  char *output_root_file="output.root";
+  TString output_root_file("output.root");
   string type;
   string acceptance_root_file="no";
   bool Is_e=false,Is_g=false;
@@ -103,7 +103,7 @@ int main (Int_t argc, char *argv[])
         Ebeam = atof(&argv[i][2]);
         break;
       case 'o':
-        output_root_file = &argv[i][2];
+        output_root_file = TString(argv[i][2]);
         break;
       default:
         cout << "Warning!!!! Unknown option: " << &argv[i][1] << endl;
