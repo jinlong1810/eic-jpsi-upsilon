@@ -34,13 +34,15 @@ const Double_t mass_p = 0.93827;
 const Double_t mass_n = 0.939566;
 const Double_t mass_jpsi = 3.097;
 const Double_t width_jpsi = 93.2e-6;
+const Double_t mass_upsilon = 9.460;
+const Double_t width_upsilon = 54.0e-6;
 
 TLorentzVector pSpec;
 
 Float_t t0lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s);
 Float_t t1lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s);
-Double_t fun_2g(Double_t x, Double_t t);
-Double_t fun_23g(Double_t x, Double_t t);
+Double_t fun_2g(Double_t x, Double_t t, Double_t M);
+Double_t fun_23g(Double_t x, Double_t t, Double_t M);
 
 int main (Int_t argc, char *argv[])
 {
@@ -80,6 +82,7 @@ int main (Int_t argc, char *argv[])
   Double_t Ebeam=11.0; // Electron Beam Energy
   Double_t Pbeam=0.0; // Proton Beam Energy
   TString output_root_file("output.root");
+  TString meson_type=("jpsi");
   string type;
   string acceptance_root_file="no";
   bool Is_e=false,Is_g=false;
@@ -106,8 +109,11 @@ int main (Int_t argc, char *argv[])
       case 'p':
         Pbeam = atof(&argv[i][2]);
         break;
+      case 'm':
+        meson_type = TString(&argv[i][2]);
+        break;
       case 'o':
-        output_root_file = TString(argv[i][2]);
+        output_root_file = TString(&argv[i][2]);
         break;
       default:
         cout << "Warning!!!! Unknown option: " << &argv[i][1] << endl;
@@ -117,6 +123,17 @@ int main (Int_t argc, char *argv[])
     }
 
     double Gbeam_min=7.5;
+
+    /* Check selected meson type */
+    if ( meson_type == "jpsi" )
+      cout << "Select meson production: J/Psi" << endl;
+    else if ( meson_type == "upsilon" )
+      cout << "Select meson production: Upsilon" << endl;
+    else
+      {
+	cout << "ERROR: Unknown meson type " << meson_type << endl;
+	return(1);
+      }
 
     if (Is_e)  cout << "Ebeam " << Ebeam << " GeV, Pbeam " << Pbeam << " GeV" << endl;
     else if (Is_g) cout << "Gbeam " << Gbeam_min << " - " << Ebeam << " GeV, Pbeam " << Pbeam << " GeV" << endl;
@@ -136,6 +153,12 @@ int main (Int_t argc, char *argv[])
     TGenPhaseSpace *gen1 = new TGenPhaseSpace();
     mass[0] = mass_e;
     mass[1] = mass_e;
+
+    Double_t mass_meson = 0;
+    if ( meson_type == "jpsi")
+      mass_meson = mass_jpsi;
+    else if ( meson_type == "upsilon" )
+      mass_meson = mass_upsilon;
 
     TLorentzVector *ps = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *pq = new TLorentzVector(0.,0.,0.,0.);
@@ -287,10 +310,10 @@ int main (Int_t argc, char *argv[])
         Q2 = -pq->M2();
         *ps1 = *ps - *p4_ep;
 
-        // ps1->SetPxPyPzE(0,0,11,sqrt(11*11+mass_p*mass_p)+mass_jpsi);
+        // ps1->SetPxPyPzE(0,0,11,sqrt(11*11+mass_p*mass_p)+mass_meson);
 
         //judge whether the event pass the kinematics
-        if (ps1->M2() > pow(mass_jpsi+mass_p,2)){
+        if (ps1->M2() > pow(mass_meson+mass_p,2)){
 
           //sample proton solid angle;
           //    theta_p = acos(gRandom->Uniform(0.85,cos(8./DEG)));
@@ -300,7 +323,7 @@ int main (Int_t argc, char *argv[])
 
           //solve recoil proton mom
           TVector3 p3_p(sin(theta_p)*cos(phi_p),sin(theta_p)*sin(phi_p),cos(theta_p));
-          Double_t aa = (ps1->M2()+mass_p*mass_p-mass_jpsi*mass_jpsi)/2.;
+          Double_t aa = (ps1->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
           Double_t bb = ps1->E();
           TVector3 p3_s(ps1->Px(),ps1->Py(),ps1->Pz());
           Double_t cc = -p3_p.Dot(p3_s);
@@ -360,7 +383,7 @@ int main (Int_t argc, char *argv[])
                     *pt = *p4_recoil - *pTarget;
                     t = -pt->M2();
 
-                    R = pow((a*mass_jpsi*mass_jpsi+Q2)/(a*mass_jpsi*mass_jpsi),n) -1;
+                    R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
                     //R defination and parameter a and n are from eq 18 of "R. Fiore et al. Exclusive Jpsi electroproduction in a dual model. Phys. Rev.,D80:116001, 2009"
                     theta_q = pq->Theta()*DEG;
                     q = pq->P();
@@ -412,14 +435,14 @@ int main (Int_t argc, char *argv[])
 
                     // calculate tmin
                     *ps2 = *pq + *pTarget;
-                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_jpsi, mass_p, ps2->M2());
-                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_jpsi, mass_p, ps2->M2());
+                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
+                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
 
 
-                    //differential crossection in nb/(phasespace cell)
+                    //differential crossection in nb/(phasespace cell)		      
                     dxs     = J/2./3.1415926*Gamma*A*exp(b*(t));
-                    dxs_2g  = J/2./3.1415926*Gamma*fun_2g(W,t);
-                    dxs_23g = J/2./3.1415926*Gamma*fun_23g(W,t);
+                    dxs_2g  = J/2./3.1415926*Gamma*fun_2g(W,t,mass_meson);
+                    dxs_23g = J/2./3.1415926*Gamma*fun_23g(W,t,mass_meson);
 
                     T->Fill();
                     if (neve1%(nevents/10)==0) cout << neve1 << endl;
@@ -465,7 +488,7 @@ int main (Int_t argc, char *argv[])
         *ps1 = *ps;
 
         //judge whether the event pass the kinematics
-        if (ps1->M2() > pow(mass_jpsi+mass_p,2)){
+        if (ps1->M2() > pow(mass_meson+mass_p,2)){
           //sample proton solid angle;
           //    theta_p = acos(gRandom->Uniform(0.85,cos(8./DEG)));
           theta_p = acos(gRandom->Uniform(-1,1)); //random selection in solid angle need to go with cos(theta)
@@ -473,7 +496,7 @@ int main (Int_t argc, char *argv[])
 
           //solve recoil proton mom
           TVector3 p3_p(sin(theta_p)*cos(phi_p),sin(theta_p)*sin(phi_p),cos(theta_p));
-          Double_t aa = (ps1->M2()+mass_p*mass_p-mass_jpsi*mass_jpsi)/2.;
+          Double_t aa = (ps1->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
           Double_t bb = ps1->E();
           TVector3 p3_s(ps1->Px(),ps1->Py(),ps1->Pz());
           Double_t cc = -p3_p.Dot(p3_s);
@@ -533,7 +556,7 @@ int main (Int_t argc, char *argv[])
                     *pt = *p4_recoil - *pTarget;
                     t = -pt->M2();
 
-                    R = pow((a*mass_jpsi*mass_jpsi+Q2)/(a*mass_jpsi*mass_jpsi),n) -1;
+                    R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
                     theta_q = pq->Theta()*DEG;
                     q = pq->P();
                     W = sqrt(pow(mass_p + pq->E(),2)-pow(pq->P(),2));
@@ -585,14 +608,14 @@ int main (Int_t argc, char *argv[])
 
                     // calculate tmin
                     *ps2 = *pq + *pTarget;
-                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_jpsi, mass_p, ps2->M2());
-                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_jpsi, mass_p, ps2->M2());
+                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
+                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
 
 
                     //differential crossection in nb/(phasespace cell)
                     dxs     = A*exp(b*(t));
-                    dxs_2g  = fun_2g(W,t);
-                    dxs_23g = fun_23g(W,t);
+                    dxs_2g  = fun_2g(W,t,mass_meson);
+                    dxs_23g = fun_23g(W,t,mass_meson);
 
                     T->Fill();
                     if (neve1%(nevents/10)==0) cout << neve1 << endl;
@@ -623,11 +646,10 @@ int main (Int_t argc, char *argv[])
   return 0;
 }
 
-Double_t fun_2g(Double_t x, Double_t t){
+Double_t fun_2g(Double_t x, Double_t t, Double_t M){
   Double_t N2g = 7.5671e3;
   Double_t v = 1./16/3.1415926;
   Double_t R = 1;
-  Double_t M = 3.097;
   Double_t xp = (2*0.938*M+M*M)/(x*x-0.938*0.938);
   Double_t ff = exp(-1.13 * t);
 
@@ -635,12 +657,11 @@ Double_t fun_2g(Double_t x, Double_t t){
   return result;
 }
 
-Double_t fun_23g(Double_t x,Double_t t){
+Double_t fun_23g(Double_t x,Double_t t, Double_t M){
   Double_t N2g = 6.499e3;
   Double_t N3g = 2.894e3;
   Double_t v = 1./16/3.1415926;
   Double_t R = 1;
-  Double_t M = 3.097;
 
   Double_t xp = (2*0.938*M+M*M)/(x*x-0.938*0.938);
   Double_t ff = exp(-1.13 * t);
