@@ -6,7 +6,7 @@ ROOTLIBS      = $(shell root-config --libs)
 ROOTGLIBS     = $(shell root-config --glibs)
 ROOTINCLUDES  = $(shell root-config --incdir)
 CXX           = g++
-CXXFLAGS      = -Wall -frtti -fno-exceptions -fPIC \
+CXXFLAGS      = -Wall -frtti -fno-exceptions -fPIC -std=c++11 \
                    -DLINUXVERS -I$(ROOTINCLUDES) -O
 
 
