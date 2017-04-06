@@ -1,10 +1,22 @@
+#include "normalization.h"
+
 int plot_kinematics_solid()
 {
-  TFile *fin = new TFile("../data/solid_e_11GeV_1M_accep.root","OPEN");
+  TFile *fin = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_2M_accep.root","OPEN");
   TTree *T = (TTree*)fin->Get("T");
 
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
+
+  /* get normalization */
+  Double_t overall = get_norm_solid_overall(T);
+
+  /* define acceptance */
+  char accep_3fold[200];
+  char accep_4fold[200];
+  sprintf(accep_3fold,"%s","(accep_je1_1+accep_je1_2)*(accep_je2_1+accep_je2_2)*(accep_e_1)");
+  //sprintf(accep_4fold,"%s","(accep_je1_1+accep_je1_2)*(accep_je2_1+accep_je2_2)*(accep_e_1)*(accep_p_1+accep_p_2)");
+  sprintf(accep_4fold,"%s","(accep_je1_1+accep_je1_2)*(accep_je2_1+accep_je2_2)*(accep_e_1)*(accep_p_1)");
 
   /* "The scattered electron and recoil proton will be detected by the forward angle detector,
    * while the electron-positron paor from J/Psi will be mostly detected by the large angle
@@ -22,7 +34,7 @@ int plot_kinematics_solid()
   h_W_Q2->GetYaxis()->SetTitleSize(0.05);
   h_W_Q2->GetXaxis()->SetLabelSize(0.05);
   h_W_Q2->GetYaxis()->SetLabelSize(0.05);
-  T->Draw("Q2:W >> h_W_Q2","accep_e_1 && (accep_je1_1 || accep_je1_2) && (accep_je2_1 || accep_je2_2)","colz");
+  T->Project("h_W_Q2", "Q2:W", Form("dxs_2g*weight*weight_decay*%s*%f",accep_3fold,overall));
 
   TCanvas *c6_ul = new TCanvas();
   h_W_Q2->Draw("colz");
@@ -41,7 +53,7 @@ int plot_kinematics_solid()
   h_W_dt_3fold->GetYaxis()->SetTitleSize(0.05);
   h_W_dt_3fold->GetXaxis()->SetLabelSize(0.05);
   h_W_dt_3fold->GetYaxis()->SetLabelSize(0.05);
-  T->Draw("abs(t-tmin):W >> h_W_dt_3fold","accep_e_1 && (accep_je1_1 || accep_je1_2) && (accep_je2_1 || accep_je2_2)","colz");
+  T->Project("h_W_dt_3fold", "abs(t-tmin):W", Form("dxs_2g*weight*weight_decay*%s*%f",accep_3fold,overall));
 
   TCanvas *c6_ll = new TCanvas();
   h_W_dt_3fold->Draw("colz");
@@ -60,7 +72,7 @@ int plot_kinematics_solid()
   h_W_dt_4fold->GetYaxis()->SetTitleSize(0.05);
   h_W_dt_4fold->GetXaxis()->SetLabelSize(0.05);
   h_W_dt_4fold->GetYaxis()->SetLabelSize(0.05);
-  T->Draw("abs(t-tmin):W >> h_W_dt_4fold","accep_e_1 && (accep_je1_1 || accep_je1_2) && (accep_je2_1 || accep_je2_2) && accep_p_1","colz");
+  T->Project("h_W_dt_4fold", "abs(t-tmin):W", Form("dxs_2g*weight*weight_decay*%s*%f",accep_4fold,overall));
 
   TCanvas *c6_lr = new TCanvas();
   h_W_dt_4fold->Draw("colz");
@@ -81,10 +93,10 @@ int plot_kinematics_solid()
   h_W_t_3fold->GetXaxis()->SetLabelSize(0.05);
   h_W_t_3fold->GetYaxis()->SetLabelSize(0.05);
 
-  T->Draw("tmin:W","accep_e_1 && (accep_je1_1 || accep_je1_2) && (accep_je2_1 || accep_je2_2)","");
+  T->Draw("tmin:W",Form("dxs_2g*weight*weight_decay*%s*%f",accep_3fold,overall));
   TGraph* g_W_tmin = new TGraph(T->GetEntries("accep_e_1 && (accep_je1_1 || accep_je1_2) && (accep_je2_1 || accep_je2_2)"),T->GetV2(),T->GetV1());
 
-  T->Draw("tmax:W","accep_e_1 && (accep_je1_1 || accep_je1_2) && (accep_je2_1 || accep_je2_2)","");
+  T->Draw("tmax:W",Form("dxs_2g*weight*weight_decay*%s*%f",accep_3fold,overall));
   TGraph* g_W_tmax = new TGraph(T->GetEntries("accep_e_1 && (accep_je1_1 || accep_je1_2) && (accep_je2_1 || accep_je2_2)"),T->GetV2(),T->GetV1());
   g_W_tmax->SetMarkerColor(kRed);
 
