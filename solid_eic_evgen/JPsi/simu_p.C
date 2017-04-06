@@ -287,12 +287,12 @@ int main (Int_t argc, char *argv[])
 
     if(Is_e){
 
-      phasespace = (5.-0.)*(4*3.1415926)*(4.*3.1415926)*(4.*3.1415926);
+      /* choose maximum energy of scattered electron based on electron beam energy */
+      Double_t p_e_max = Ebeam - 6.0;
+
+      phasespace = (p_e_max-0.)*(4*3.1415926)*(4.*3.1415926)*(4.*3.1415926);
 
       while(qflag){
-
-	/* choose maximum energy of scattered electron based on electron beam energy */
-	Double_t p_e_max = Ebeam - 6.0;
 
         //sample electron's angle and momentum
         //       p_e = gRandom->Uniform(0.5,3.0);
