@@ -291,9 +291,12 @@ int main (Int_t argc, char *argv[])
 
       while(qflag){
 
+	/* choose maximum energy of scattered electron based on electron beam energy */
+	Double_t p_e_max = Ebeam - 6.0;
+
         //sample electron's angle and momentum
         //       p_e = gRandom->Uniform(0.5,3.0);
-        p_e = gRandom->Uniform(0.,5.0);
+        p_e = gRandom->Uniform(0.,p_e_max);
         //       theta_e = acos(gRandom->Uniform(0.85,cos(8./DEG)));
         //       theta_e = acos(gRandom->Uniform(cos(40./DEG),cos(0./DEG))); //random selection in solid angle need to go with cos(theta)
         theta_e = acos(gRandom->Uniform(-1,1)); //random selection in solid angle need to go with cos(theta)
