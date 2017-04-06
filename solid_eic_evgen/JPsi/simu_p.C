@@ -305,7 +305,7 @@ int main (Int_t argc, char *argv[])
         p4_ep->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
 
         pBeam->SetPxPyPzE(0.,0.,Ebeam,sqrt(Ebeam*Ebeam+mass_e*mass_e));
-        pTarget->SetPxPyPzE(0.,0.,-Pbeam,sqrt(Pbeam*Pbeam+mass_p*mass_p));
+        pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
         *ps = *pBeam + *pTarget;
 
         *pq = *pBeam - *p4_ep;
@@ -481,7 +481,7 @@ int main (Int_t argc, char *argv[])
         //       cout << Gbeam << " " << Gflux << endl;
 
         pBeam->SetPxPyPzE(0.,0.,Gbeam,Gbeam);
-        pTarget->SetPxPyPzE(0.,0.,-Pbeam,sqrt(Pbeam*Pbeam+mass_p*mass_p));
+        pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
 
         *ps = *pBeam + *pTarget;
 
