@@ -79,8 +79,8 @@ int main (Int_t argc, char *argv[])
   //       }
   //     }
   Int_t nevents=1000000; //number of events
-  Double_t Ebeam=11.0; // Electron Beam Energy
-  Double_t Etarget=0.0; // Proton Beam Energy
+  Double_t Ebeam_lab=11.0; // Electron Beam Energy in labortory frame
+  Double_t Etarget_lab=0.0; // Proton Beam Energy in labortory frame
   TString output_root_file("output.root");
   TString meson_type=("jpsi");
   string type;
@@ -104,10 +104,10 @@ int main (Int_t argc, char *argv[])
         else { cout << "wrong type" << endl; return 0; }
         break;
       case 'b':
-        Ebeam = atof(&argv[i][2]);
+        Ebeam_lab = atof(&argv[i][2]);
         break;
       case 'p':
-        Etarget = atof(&argv[i][2]);
+        Etarget_lab = atof(&argv[i][2]);
         break;
       case 'm':
         meson_type = TString(&argv[i][2]);
@@ -135,6 +135,29 @@ int main (Int_t argc, char *argv[])
 	return(1);
       }
 
+    /* Transition from 'laboratory frame' to 'target rest' frame*/
+    TLorentzVector *pBeam_lab = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *pTarget_lab = new TLorentzVector(0.,0.,0.,0.);
+
+    pBeam_lab->SetPxPyPzE(0.,0.,Ebeam_lab,sqrt(Ebeam_lab*Ebeam_lab+mass_e*mass_e));
+    pTarget_lab->SetPxPyPzE(0.,0.,Etarget_lab,sqrt(Etarget_lab*Etarget_lab+mass_p*mass_p));
+
+    TLorentzVector *pBeam = (TLorentzVector*)pBeam_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *pTarget = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
+
+    TVector3 beta_lab = pTarget_lab->Vect();
+    beta_lab *= -1./pTarget_lab->E();
+    pBeam->Boost(beta_lab);
+    pTarget->Boost(beta_lab);
+
+    cout << "Energies in LABORATORY  FRAME: " << pBeam_lab->E() << " GeV (e) -> " << pTarget_lab->E() << " GeV (p) " << endl;
+    cout << "Energies in TARGET REST FRAME: " << pBeam->E() << " GeV (e) -> " << pTarget->E() << " GeV (p) " << endl;
+
+    Double_t Ebeam = pBeam->Vect().Mag();
+    Double_t Etarget = 0;//pTarget->Vect().Mag();
+    pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
+    /* END transition to 'target rest' frame */
+
     if (Is_e)  cout << "Ebeam " << Ebeam << " GeV, Etarget " << Etarget << " GeV" << endl;
     else if (Is_g) cout << "Gbeam " << Gbeam_min << " - " << Ebeam << " GeV, Etarget " << Etarget << " GeV" << endl;
 
@@ -146,9 +169,6 @@ int main (Int_t argc, char *argv[])
     //a=0.00243=0.000146/0.06 for a 100% radiator
 
     Double_t mass[10];
-
-    TLorentzVector *pBeam = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *pTarget = new TLorentzVector(0.,0.,0.,0.);
 
     TGenPhaseSpace *gen1 = new TGenPhaseSpace();
     mass[0] = mass_e;
@@ -304,8 +324,6 @@ int main (Int_t argc, char *argv[])
 
         p4_ep->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
 
-        pBeam->SetPxPyPzE(0.,0.,Ebeam,sqrt(Ebeam*Ebeam+mass_e*mass_e));
-        pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
         *ps = *pBeam + *pTarget;
 
         *pq = *pBeam - *p4_ep;
@@ -447,6 +465,38 @@ int main (Int_t argc, char *argv[])
                     dxs_2g  = J/2./3.1415926*Gamma*fun_2g(W,t,mass_meson);
                     dxs_23g = J/2./3.1415926*Gamma*fun_23g(W,t,mass_meson);
 
+
+		    /* Boost final state particles to laboratory frame */
+		    p4_ep->Boost(-1*beta_lab);
+		    p4_recoil->Boost(-1*beta_lab);
+		    p4_jpsi->Boost(-1*beta_lab);
+		    p4_je1->Boost(-1*beta_lab);
+		    p4_je2->Boost(-1*beta_lab);
+		    //cout << pBeam->Vect().Z() << " --> " << p4_ep->Vect().Z() << endl;
+
+		    /* re-calculate final state particle parameters */
+		    p_e = p4_ep->P();
+                    theta_e = p4_ep->Theta()*DEG;
+                    phi_e = p4_ep->Phi()*DEG;
+
+		    p_p = p4_recoil->P();
+                    theta_p = p4_recoil->Theta()*DEG;
+                    phi_p = p4_recoil->Phi()*DEG;
+
+                    p_jpsi = p4_jpsi->P();
+                    theta_jpsi = p4_jpsi->Theta()*DEG;
+                    phi_jpsi = p4_jpsi->Phi()*DEG;
+
+                    p_je1 = p4_je1->P();
+                    theta_je1 = p4_je1->Theta()*DEG;
+                    phi_je1 = p4_je1->Phi()*DEG;
+
+                    p_je2 = p4_je2->P();
+                    theta_je2 = p4_je2->Theta()*DEG;
+                    phi_je2 = p4_je2->Phi()*DEG;
+		    /* END boost final state particles back to laboratory frame */
+
+		    /* Fill tree */
                     T->Fill();
                     if (neve1%(nevents/10)==0) cout << neve1 << endl;
                     neve1++;
