@@ -31,11 +31,11 @@ const Double_t DEG = 180./3.1415926;
 
 const Double_t mass_e = 0.511e-3;
 const Double_t mass_p = 0.93827;
-const Double_t mass_n = 0.939566;
+// const Double_t mass_n = 0.939566;
 const Double_t mass_jpsi = 3.097;
-const Double_t width_jpsi = 93.2e-6;
+// const Double_t width_jpsi = 93.2e-6;
 const Double_t mass_upsilon = 9.460;
-const Double_t width_upsilon = 54.0e-6;
+// const Double_t width_upsilon = 54.0e-6;
 
 TLorentzVector pSpec;
 
@@ -176,11 +176,11 @@ int main (Int_t argc, char *argv[])
     TLorentzVector *p4_je1 = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_je2 = new TLorentzVector(0.,0.,0.,0.);
 
-    TLorentzVector *p4_ep_GJ = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_recoil_GJ = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_jpsi_GJ = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_je1_GJ = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_je2_GJ = new TLorentzVector(0.,0.,0.,0.);
+//     TLorentzVector *p4_ep_GJ = new TLorentzVector(0.,0.,0.,0.);
+//     TLorentzVector *p4_recoil_GJ = new TLorentzVector(0.,0.,0.,0.);
+//     TLorentzVector *p4_jpsi_GJ = new TLorentzVector(0.,0.,0.,0.);
+//     TLorentzVector *p4_je1_GJ = new TLorentzVector(0.,0.,0.,0.);
+//     TLorentzVector *p4_je2_GJ = new TLorentzVector(0.,0.,0.,0.);
 
 
     TFile *file = new TFile(output_root_file,"RECREATE");
