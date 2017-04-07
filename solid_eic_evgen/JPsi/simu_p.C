@@ -80,7 +80,7 @@ int main (Int_t argc, char *argv[])
   //     }
   Int_t nevents=1000000; //number of events
   Double_t Ebeam=11.0; // Electron Beam Energy
-  Double_t Pbeam=0.0; // Proton Beam Energy
+  Double_t Etarget=0.0; // Proton Beam Energy
   TString output_root_file("output.root");
   TString meson_type=("jpsi");
   string type;
@@ -107,7 +107,7 @@ int main (Int_t argc, char *argv[])
         Ebeam = atof(&argv[i][2]);
         break;
       case 'p':
-        Pbeam = atof(&argv[i][2]);
+        Etarget = atof(&argv[i][2]);
         break;
       case 'm':
         meson_type = TString(&argv[i][2]);
@@ -135,8 +135,8 @@ int main (Int_t argc, char *argv[])
 	return(1);
       }
 
-    if (Is_e)  cout << "Ebeam " << Ebeam << " GeV, Pbeam " << Pbeam << " GeV" << endl;
-    else if (Is_g) cout << "Gbeam " << Gbeam_min << " - " << Ebeam << " GeV, Pbeam " << Pbeam << " GeV" << endl;
+    if (Is_e)  cout << "Ebeam " << Ebeam << " GeV, Etarget " << Etarget << " GeV" << endl;
+    else if (Is_g) cout << "Gbeam " << Gbeam_min << " - " << Ebeam << " GeV, Etarget " << Etarget << " GeV" << endl;
 
     TF1 *fbr = new TF1("fbr","[1]/(x/[0])*(4./3.-4./3.*(x/[0])+(x/[0])*(x/[0]))",Gbeam_min,Ebeam);
     fbr->SetParameter(0,Ebeam);
@@ -194,7 +194,7 @@ int main (Int_t argc, char *argv[])
     T->Branch("Ebeam",&Ebeam,"data/D");
     T->Branch("Gbeam",&Gbeam,"data/D");
     T->Branch("Gflux",&Gflux,"data/D");
-    T->Branch("Pbeam",&Pbeam,"data/D");
+    T->Branch("Etarget",&Etarget,"data/D");
 
     Double_t Q2,t;
 
