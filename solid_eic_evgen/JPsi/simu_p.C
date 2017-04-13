@@ -47,37 +47,7 @@ Double_t fun_23g(Double_t x, Double_t t, Double_t M);
 int main (Int_t argc, char *argv[])
 {
   gRandom->SetSeed(0);
-  //   if (argc==1){
-  //     cout << "./simu_p -a[nevents] -b[save_flag] -c[Ebeam] -d[target_flag]" << endl;
-  //     cout << "save_flag   = 0: only save the events passing acceptance and kinematics" << endl;
-  //     cout << "save_flag   = 1: save the events passing kinematics" << endl;
-  //     cout << "target_flag = 1: Proton" << endl;
-  //     cout << "target_flag = 2: Deuteron" << endl;
-  //   }else{
-  //     Int_t nevents=500000;
-  //     Int_t save_flag=0;
-  //     Double_t Ebeam=11.0; // Beam Energy
-  //     Int_t target_flag = 1; // proton
-  //
-  //     for(Int_t i = 1; i != argc; i++){
-  //       switch(argv[i][1]){
-  //       case 'a':
-  //         nevents= atoi(&argv[i][2]);
-  //    break;
-  //       case 'b':
-  //    save_flag = atoi(&argv[i][2]);
-  //    break;
-  //       case 'c':
-  //    Ebeam = atof(&argv[i][2]);
-  //    break;
-  //       case 'd':
-  //    target_flag = atoi(&argv[i][2]);
-  //    break;
-  //       default:
-  //    cout << "Warning!!!! Unknown option: " << &argv[i][1] << endl;
-  //    break;
-  //       }
-  //     }
+
   Int_t nevents=1000000; //number of events
   Double_t Ebeam_lab=11.0; // Electron Beam Energy in labortory frame
   Double_t Etarget_lab=0.0; // Proton Beam Energy in labortory frame
@@ -98,7 +68,6 @@ int main (Int_t argc, char *argv[])
         break;
       case 't':
         type = &argv[i][2];
-        //       cout << type << endl;
         if (type=="e") {Is_e=true;}
         else if (type=="g") {Is_g=true;}
         else { cout << "wrong type" << endl; return 0; }
@@ -154,7 +123,7 @@ int main (Int_t argc, char *argv[])
     cout << "Energies in TARGET REST FRAME: " << pBeam->E() << " GeV (e) -> " << pTarget->E() << " GeV (p) " << endl;
 
     Double_t Ebeam = pBeam->Vect().Mag();
-    Double_t Etarget = 0;//pTarget->Vect().Mag();
+    Double_t Etarget = 0; //pTarget->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0
     pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
     /* END transition to 'target rest' frame */
 
@@ -196,19 +165,9 @@ int main (Int_t argc, char *argv[])
     TLorentzVector *p4_je1 = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_je2 = new TLorentzVector(0.,0.,0.,0.);
 
-//     TLorentzVector *p4_ep_GJ = new TLorentzVector(0.,0.,0.,0.);
-//     TLorentzVector *p4_recoil_GJ = new TLorentzVector(0.,0.,0.,0.);
-//     TLorentzVector *p4_jpsi_GJ = new TLorentzVector(0.,0.,0.,0.);
-//     TLorentzVector *p4_je1_GJ = new TLorentzVector(0.,0.,0.,0.);
-//     TLorentzVector *p4_je2_GJ = new TLorentzVector(0.,0.,0.,0.);
-
-
     TFile *file = new TFile(output_root_file,"RECREATE");
     TTree *T = new TTree("T","T");
     T->SetDirectory(file);
-
-    //     hf->SetDirectory(file);
-    //     hl->SetDirectory(file);
 
     Double_t Gbeam=0,Gflux=0;
     T->Branch("Ebeam",&Ebeam,"data/D");
@@ -256,7 +215,7 @@ int main (Int_t argc, char *argv[])
     Int_t neve=0,neve1=0;
     T->Branch("neve",&neve,"data/I");
 
-    // calculation formular
+    /* calculation formular */
     Double_t Gamma;
     Double_t epsilon,Keq,W,q,theta_q;
     Double_t J,R,theta_cm,r,phi_cm;
@@ -285,23 +244,13 @@ int main (Int_t argc, char *argv[])
     Double_t phasespace;
     T->Branch("phasespace",&phasespace,"data/D");
 
-    //     Double_t accep_e,accep_je1,accep_je2,accep_p;
-    //     T->Branch("accep_e",&accep_e,"data/D");
-    //     T->Branch("accep_je1",&accep_je1,"data/D");
-    //     T->Branch("accep_je2",&accep_je2,"data/D");
-    //     T->Branch("accep_p",&accep_p,"data/D");
-    //
-    //     Double_t accep_e_both,accep_p_both;
-    //     T->Branch("accep_e_both",&accep_e_both,"data/D");
-    //     T->Branch("accep_p_both",&accep_p_both,"data/D");
-
     Double_t A = 0.94;
     Double_t b = -0.97;
     Double_t alpha = 1./137.;
     Double_t a = 2.164;
     Double_t n = 2.131;
 
-    // start to generate particles
+    /* start to generate particles */
     Int_t qflag = 1;
     Int_t counter[4]={0,0,0,0};
 
@@ -364,8 +313,6 @@ int main (Int_t argc, char *argv[])
                 weight = 0.5;
               }
 
-              //            cout << sol[0] << " " << sol[1] << endl;
-
               Double_t theta_ps = theta_p;
               Double_t phi_ps = phi_p;
 
@@ -374,8 +321,6 @@ int main (Int_t argc, char *argv[])
                 if (p_p>0){
                   p4_recoil->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
                   *p4_jpsi = *ps1-*p4_recoil;
-
-                  //    cout << p4_recoil->Theta() << " " << theta_ps << endl;
 
                   if (p4_jpsi->M()>0.){
                     gen1->SetDecay(*p4_jpsi,2,&mass[0]);
@@ -419,7 +364,7 @@ int main (Int_t argc, char *argv[])
                     // cout << aa - bb*sqrt(p_p*p_p+mass_p*mass_p)-cc*p_p << endl;
 
                     Double_t dEpdcp=fabs((ps1->Pz()-(ps1->Px()*cos(phi_p/DEG)+ps1->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
-                    //cout << J << " " << 1./mass_p/2./dEpdcp<< " " << dEpdcp << " " << p_p << " " << bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p << endl;
+
                     J = 2 * mass_p * dEpdcp;
 
                     //go to JPsi at rest frame
@@ -472,7 +417,6 @@ int main (Int_t argc, char *argv[])
 		    p4_jpsi->Boost(-1*beta_lab);
 		    p4_je1->Boost(-1*beta_lab);
 		    p4_je2->Boost(-1*beta_lab);
-		    //cout << pBeam->Vect().Z() << " --> " << p4_ep->Vect().Z() << endl;
 
 		    /* re-calculate final state particle parameters */
 		    p_e = p4_ep->P();
@@ -579,8 +523,6 @@ int main (Int_t argc, char *argv[])
                 if (p_p>0){
                   p4_recoil->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
                   *p4_jpsi = *ps1-*p4_recoil;
-
-                  //    cout << p4_recoil->Theta() << " " << theta_ps << endl;
 
                   if (p4_jpsi->M()>0.){
                     gen1->SetDecay(*p4_jpsi,2,&mass[0]);
