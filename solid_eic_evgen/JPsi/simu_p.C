@@ -125,8 +125,61 @@ int main (Int_t argc, char *argv[])
     Double_t Etarget = 0;
     pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
 
+    /* Monitoring output statements */
     cout << "Energies in LABORATORY  FRAME: " << pBeam_lab->E() << " GeV (e) -> " << pTarget_lab->E() << " GeV (p) " << endl;
     cout << "Energies in TARGET REST FRAME: " << pBeam->E() << " GeV (e) -> " << pTarget->E() << " GeV (p) " << endl;
+
+    cout << "********************" << endl;
+
+    cout << "Lab frame electron 4-vector before boosts: ("
+	 << pBeam_lab->Px() << ", "
+	 << pBeam_lab->Py() << ", "
+	 << pBeam_lab->Pz() << ", "
+	 << pBeam_lab->E() << ")" << endl;
+
+    cout << "Proton Rest frame electron 4-vector: ("
+	 << pBeam->Px() << ", "
+	 << pBeam->Py() << ", "
+	 << pBeam->Pz() << ", "
+	 << pBeam->E() << ")" << endl;
+ 
+    TLorentzVector *pBeam_lab_xcheck = new TLorentzVector(0.,0.,0.,0.);
+    *pBeam_lab_xcheck = *pBeam;
+    pBeam_lab_xcheck->Boost(-beta_lab_protonrest);
+
+    cout << "Lab frame electron 4-vector after boosts: ("
+	 << pBeam_lab_xcheck->Px() << ", "
+	 << pBeam_lab_xcheck->Py() << ", "
+	 << pBeam_lab_xcheck->Pz() << ", "
+	 << pBeam_lab_xcheck->E() << ")" << endl;
+
+    cout << "********************" << endl;
+
+    cout << "Lab frame proton 4-vector before boosts: ("
+	 << pTarget_lab->Px() << ", "
+	 << pTarget_lab->Py() << ", "
+	 << pTarget_lab->Pz() << ", "
+	 << pTarget_lab->E() << ")" << endl;
+
+    cout << "Proton Rest frame proton 4-vector: ("
+	 << pTarget->Px() << ", "
+	 << pTarget->Py() << ", "
+	 << pTarget->Pz() << ", "
+	 << pTarget->E() << ")" << endl;
+ 
+    TLorentzVector *pTarget_lab_xcheck = new TLorentzVector(0.,0.,0.,0.);
+    *pTarget_lab_xcheck = *pTarget;
+    pTarget_lab_xcheck->Boost(-beta_lab_protonrest);
+
+    cout << "Lab frame proton 4-vector after boosts: ("
+	 << pTarget_lab_xcheck->Px() << ", "
+	 << pTarget_lab_xcheck->Py() << ", "
+	 << pTarget_lab_xcheck->Pz() << ", "
+	 << pTarget_lab_xcheck->E() << ")" << endl;
+
+    cout << "********************" << endl;
+    /* END Monitoring output statements */
+
     /* END transition to 'target rest' frame */
 
     if (Is_e)  cout << "Ebeam " << Ebeam << " GeV, Etarget " << Etarget << " GeV" << endl;
