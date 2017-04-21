@@ -114,17 +114,19 @@ int main (Int_t argc, char *argv[])
     TLorentzVector *pBeam = (TLorentzVector*)pBeam_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *pTarget = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
 
-    TVector3 beta_lab = pTarget_lab->Vect();
-    beta_lab *= -1./pTarget_lab->E();
-    pBeam->Boost(beta_lab);
-    pTarget->Boost(beta_lab);
+    /* determine beta to move to 'proton at rest' reference frame */
+    TVector3 beta_lab_protonrest = pTarget_lab->Vect();
+    beta_lab_protonrest *= -1./pTarget_lab->E();
+    pBeam->Boost(beta_lab_protonrest);
+    pTarget->Boost(beta_lab_protonrest);
+
+    Double_t Ebeam = pBeam->E();
+    /* pTarget->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0 */
+    Double_t Etarget = 0;
+    pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
 
     cout << "Energies in LABORATORY  FRAME: " << pBeam_lab->E() << " GeV (e) -> " << pTarget_lab->E() << " GeV (p) " << endl;
     cout << "Energies in TARGET REST FRAME: " << pBeam->E() << " GeV (e) -> " << pTarget->E() << " GeV (p) " << endl;
-
-    Double_t Ebeam = pBeam->Vect().Mag();
-    Double_t Etarget = 0; //pTarget->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0
-    pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
     /* END transition to 'target rest' frame */
 
     if (Is_e)  cout << "Ebeam " << Ebeam << " GeV, Etarget " << Etarget << " GeV" << endl;
@@ -155,15 +157,27 @@ int main (Int_t argc, char *argv[])
     TLorentzVector *ps1 = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *ps2 = new TLorentzVector(0.,0.,0.,0.);
 
+    /* 4-vectors in "proton at rest" frame */
     TLorentzVector *p4_ep = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_recoil = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_jpsi = new TLorentzVector(0.,0.,0.,0.);
 
-    TLorentzVector *p4_recoil_tmp = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_q_tmp = new TLorentzVector(0.,0.,0.,0.);
-
     TLorentzVector *p4_je1 = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_je2 = new TLorentzVector(0.,0.,0.,0.);
+
+    /* 4-vectors in "laboratory" frame */
+    TLorentzVector *p4_ep_lab = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_recoil_lab = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_jpsi_lab = new TLorentzVector(0.,0.,0.,0.);
+
+    TLorentzVector *p4_je1_lab = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_je2_lab = new TLorentzVector(0.,0.,0.,0.);
+
+    /* 4-vectors in "J/Psi at rest" frame */
+    TLorentzVector *p4_je1_jpsirest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_recoil_jpsirest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_q_jpsirest = new TLorentzVector(0.,0.,0.,0.);
+
 
     TFile *file = new TFile(output_root_file,"RECREATE");
     TTree *T = new TTree("T","T");
@@ -177,12 +191,12 @@ int main (Int_t argc, char *argv[])
 
     Double_t Q2,t;
 
-    Double_t p_e,theta_e,phi_e;
-    Double_t p_p,theta_p,phi_p;
-    Double_t p_jpsi, theta_jpsi,phi_jpsi;
+    Double_t p_e,theta_e,phi_e,eta_e;
+    Double_t p_p,theta_p,phi_p,eta_p;
+    Double_t p_jpsi, theta_jpsi,phi_jpsi,eta_jpsi;
 
-    Double_t p_je1, theta_je1, phi_je1;
-    Double_t p_je2, theta_je2, phi_je2;
+    Double_t p_je1, theta_je1, phi_je1, eta_je1;
+    Double_t p_je2, theta_je2, phi_je2, eta_je2;
 
     Double_t weight_decay;
     T->Branch("weight_decay",&weight_decay,"data/D");
@@ -195,21 +209,26 @@ int main (Int_t argc, char *argv[])
     T->Branch("p_e",&p_e,"data/D");
     T->Branch("theta_e",&theta_e,"data/D");
     T->Branch("phi_e",&phi_e,"data/D");
+    T->Branch("eta_e",&eta_e,"data/D");
 
     T->Branch("p_p",&p_p,"data/D");
     T->Branch("theta_p",&theta_p,"data/D");
+    T->Branch("eta_p",&eta_p,"data/D");
     T->Branch("phi_p",&phi_p,"data/D");
 
     T->Branch("p_jpsi",&p_jpsi,"data/D");
     T->Branch("theta_jpsi",&theta_jpsi,"data/D");
+    T->Branch("eta_jpsi",&eta_jpsi,"data/D");
     T->Branch("phi_jpsi",&phi_jpsi,"data/D");
 
     T->Branch("p_je1",&p_je1,"data/D");
     T->Branch("theta_je1",&theta_je1,"data/D");
+    T->Branch("eta_je1",&eta_je1,"data/D");
     T->Branch("phi_je1",&phi_je1,"data/D");
 
     T->Branch("p_je2",&p_je2,"data/D");
     T->Branch("theta_je2",&theta_je2,"data/D");
+    T->Branch("eta_je2",&eta_je2,"data/D");
     T->Branch("phi_je2",&phi_je2,"data/D");
 
     Int_t neve=0,neve1=0;
@@ -269,6 +288,7 @@ int main (Int_t argc, char *argv[])
         //       theta_e = acos(gRandom->Uniform(0.85,cos(8./DEG)));
         //       theta_e = acos(gRandom->Uniform(cos(40./DEG),cos(0./DEG))); //random selection in solid angle need to go with cos(theta)
         theta_e = acos(gRandom->Uniform(-1,1)); //random selection in solid angle need to go with cos(theta)
+	eta_e = -1*log( tan( theta_e / 2.0 ) );
         phi_e = gRandom->Uniform(0.,2.*3.1415926);
 
         p4_ep->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
@@ -329,6 +349,7 @@ int main (Int_t argc, char *argv[])
                     p4_je2 = gen1->GetDecay(1);
 
                     theta_e = p4_ep->Theta()*DEG;
+		    eta_e = p4_ep->PseudoRapidity();
                     phi_e = p4_ep->Phi()*DEG;
 
                     theta_p = p4_recoil->Theta()*DEG;
@@ -370,25 +391,26 @@ int main (Int_t argc, char *argv[])
                     //go to JPsi at rest frame
                     TVector3 beta = p4_jpsi->Vect();
                     beta *= -1./p4_jpsi->E();
-                    p4_je1->Boost(beta);
+		    *p4_je1_jpsirest = *p4_je1;
+                    p4_je1_jpsirest->Boost(beta);
                     //get recoil proton in the same frame
-                    *p4_recoil_tmp = *p4_recoil;
-                    p4_recoil_tmp->Boost(beta);
+                    *p4_recoil_jpsirest = *p4_recoil;
+                    p4_recoil_jpsirest->Boost(beta);
 
-                    *p4_q_tmp = *pq;
-                    p4_q_tmp->Boost(beta);
+                    *p4_q_jpsirest = *pq;
+                    p4_q_jpsirest->Boost(beta);
                     // calculate the theta angle between these two
-                    TVector3 a1 = p4_je1->Vect();
-                    TVector3 a2 = p4_recoil_tmp->Vect();
-                    TVector3 a3 = p4_q_tmp->Vect();
+                    TVector3 a1 = p4_je1_jpsirest->Vect();
+                    TVector3 a2 = p4_recoil_jpsirest->Vect();
+                    TVector3 a3 = p4_q_jpsirest->Vect();
 
                     a1.RotateUz(a2.Unit());
                     a3.RotateUz(a2.Unit());
-                    theta_cm = a1.Theta()*DEG;//p4_je1->Theta()*DEG;
+                    theta_cm = a1.Theta()*DEG;//p4_je1_jpsirest->Theta()*DEG;
                     phi_cm = a1.Phi()*DEG-a3.Phi()*DEG;
                     if (phi_cm<0.) phi_cm+=360;
                     if (phi_cm>360) phi_cm-=360;
-                    // phi_cm = p4_je1->Phi()*DEG;
+                    // phi_cm = p4_je1_jpsirest->Phi()*DEG;
                     //theta_cm = 0.;
 
                     weight_decay = 3./2./4./3.1415926*(1-r + (3*r-1)*pow(cos(theta_cm/DEG),2));
@@ -411,33 +433,45 @@ int main (Int_t argc, char *argv[])
                     dxs_23g = J/2./3.1415926*Gamma*fun_23g(W,t,mass_meson);
 
 
+		    /* Create vectors in laboratory frame */
+		    *p4_ep_lab = *p4_ep;
+		    *p4_recoil_lab = *p4_recoil;
+		    *p4_jpsi_lab = *p4_jpsi;
+		    *p4_je1_lab = *p4_je1;
+		    *p4_je2_lab = *p4_je2;
+
 		    /* Boost final state particles to laboratory frame */
-		    p4_ep->Boost(-1*beta_lab);
-		    p4_recoil->Boost(-1*beta_lab);
-		    p4_jpsi->Boost(-1*beta_lab);
-		    p4_je1->Boost(-1*beta_lab);
-		    p4_je2->Boost(-1*beta_lab);
+		    p4_ep_lab->Boost(-1*beta_lab_protonrest);
+		    p4_recoil_lab->Boost(-1*beta_lab_protonrest);
+		    p4_jpsi_lab->Boost(-1*beta_lab_protonrest);
+		    p4_je1_lab->Boost(-1*beta_lab_protonrest);
+		    p4_je2_lab->Boost(-1*beta_lab_protonrest);
 
 		    /* re-calculate final state particle parameters */
-		    p_e = p4_ep->P();
-                    theta_e = p4_ep->Theta()*DEG;
-                    phi_e = p4_ep->Phi()*DEG;
+		    p_e = p4_ep_lab->P();
+                    theta_e = p4_ep_lab->Theta()*DEG;
+                    eta_e = p4_ep_lab->PseudoRapidity();
+                    phi_e = p4_ep_lab->Phi()*DEG;
 
-		    p_p = p4_recoil->P();
-                    theta_p = p4_recoil->Theta()*DEG;
-                    phi_p = p4_recoil->Phi()*DEG;
+		    p_p = p4_recoil_lab->P();
+                    theta_p = p4_recoil_lab->Theta()*DEG;
+                    eta_p = p4_recoil_lab->PseudoRapidity();
+                    phi_p = p4_recoil_lab->Phi()*DEG;
 
-                    p_jpsi = p4_jpsi->P();
-                    theta_jpsi = p4_jpsi->Theta()*DEG;
-                    phi_jpsi = p4_jpsi->Phi()*DEG;
+                    p_jpsi = p4_jpsi_lab->P();
+                    theta_jpsi = p4_jpsi_lab->Theta()*DEG;
+                    eta_jpsi = p4_jpsi_lab->PseudoRapidity();
+                    phi_jpsi = p4_jpsi_lab->Phi()*DEG;
 
-                    p_je1 = p4_je1->P();
-                    theta_je1 = p4_je1->Theta()*DEG;
-                    phi_je1 = p4_je1->Phi()*DEG;
+                    p_je1 = p4_je1_lab->P();
+                    theta_je1 = p4_je1_lab->Theta()*DEG;
+                    eta_je1 = p4_je1_lab->PseudoRapidity();
+                    phi_je1 = p4_je1_lab->Phi()*DEG;
 
-                    p_je2 = p4_je2->P();
-                    theta_je2 = p4_je2->Theta()*DEG;
-                    phi_je2 = p4_je2->Phi()*DEG;
+                    p_je2 = p4_je2_lab->P();
+                    theta_je2 = p4_je2_lab->Theta()*DEG;
+                    eta_je2 = p4_je2_lab->PseudoRapidity();
+                    phi_je2 = p4_je2_lab->Phi()*DEG;
 		    /* END boost final state particles back to laboratory frame */
 
 		    /* Fill tree */
@@ -571,25 +605,26 @@ int main (Int_t argc, char *argv[])
                     //go to JPsi at rest frame
                     TVector3 beta = p4_jpsi->Vect();
                     beta *= -1./p4_jpsi->E();
-                    p4_je1->Boost(beta);
+		    *p4_je1_jpsirest = *p4_je1;
+                    p4_je1_jpsirest->Boost(beta);
                     //get recoil proton in the same frame
-                    *p4_recoil_tmp = *p4_recoil;
-                    p4_recoil_tmp->Boost(beta);
+                    *p4_recoil_jpsirest = *p4_recoil;
+                    p4_recoil_jpsirest->Boost(beta);
 
-                    *p4_q_tmp = *pq;
-                    p4_q_tmp->Boost(beta);
+                    *p4_q_jpsirest = *pq;
+                    p4_q_jpsirest->Boost(beta);
                     // calculate the theta angle between these two
-                    TVector3 a1 = p4_je1->Vect();
-                    TVector3 a2 = p4_recoil_tmp->Vect();
-                    TVector3 a3 = p4_q_tmp->Vect();
+                    TVector3 a1 = p4_je1_jpsirest->Vect();
+                    TVector3 a2 = p4_recoil_jpsirest->Vect();
+                    TVector3 a3 = p4_q_jpsirest->Vect();
 
                     a1.RotateUz(a2.Unit());
                     a3.RotateUz(a2.Unit());
-                    theta_cm = a1.Theta()*DEG;//p4_je1->Theta()*DEG;
+                    theta_cm = a1.Theta()*DEG;//p4_je1_jpsirest->Theta()*DEG;
                     phi_cm = a1.Phi()*DEG-a3.Phi()*DEG;
                     if (phi_cm<0.) phi_cm+=360;
                     if (phi_cm>360) phi_cm-=360;
-                    // phi_cm = p4_je1->Phi()*DEG;
+                    // phi_cm = p4_je1_jpsirest->Phi()*DEG;
                     //theta_cm = 0.;
 
                     r=0; //real photon has no transverse component
