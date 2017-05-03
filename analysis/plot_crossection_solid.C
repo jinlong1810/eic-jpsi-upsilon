@@ -2,7 +2,8 @@
 
 int plot_crossection_solid()
 {
-  TFile *fin_11GeV = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_accep.root","OPEN");
+  TFile *fin_11GeV = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_10k_accep.root","OPEN");
+  //TFile *fin_11GeV = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_accep.root","OPEN");
   TTree *T = (TTree*)fin_11GeV->Get("T");
 
   TTree *t_ref1 = new TTree();
