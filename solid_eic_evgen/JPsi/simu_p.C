@@ -1,4 +1,5 @@
 #include "simu_p.h"
+#include "globals.h"
 
 #include <TApplication.h>
 #include <TTree.h>
@@ -29,17 +30,6 @@
 
 using namespace std;
 
-/* gloabl variables - @TODO: Move these elsewhere */
-const Double_t DEG = 180./3.1415926;
-
-const Double_t mass_e = 0.511e-3;
-const Double_t mass_p = 0.93827;
-// const Double_t mass_n = 0.939566;
-const Double_t mass_jpsi = 3.097;
-// const Double_t width_jpsi = 93.2e-6;
-const Double_t mass_upsilon = 9.460;
-// const Double_t width_upsilon = 54.0e-6;
-
 Simulator::Simulator(){
 
   seed = 0;
@@ -52,7 +42,6 @@ Simulator::Simulator(){
   output_root_file = "output.root";
 
   meson_type=("jpsi");
-  acceptance_root_file = "no";
 
   Is_e=false;
   Is_g=false;
@@ -60,11 +49,32 @@ Simulator::Simulator(){
   Gbeam_min = 7.5;
 }
 
-int Simulator::run ()
-{
-  cout << "Running Simulator..." << endl;
 
-  gRandom->SetSeed(seed);
+int Simulator::set_process_type( TString type )
+{
+  if (type=="e")
+    {
+      cout << "Select process type: Electroproduction" << endl;
+      Is_e=true;
+    }
+  else if (type=="g")
+    {
+      cout << "Select process type: Photoproduction" << endl;
+      Is_g=true;
+    }
+  else
+    {
+      cout << "wrong type" << endl;
+      return 1;
+    }
+
+  return 0;
+}
+
+
+int Simulator::set_meson_type( TString newtype )
+{
+  meson_type = newtype;
 
   /* Check selected meson type */
   if ( meson_type == "jpsi" )
@@ -77,6 +87,15 @@ int Simulator::run ()
       return(1);
     }
 
+  return 0;
+}
+
+
+int Simulator::run ()
+{
+  cout << "Running Simulator..." << endl;
+
+  gRandom->SetSeed(seed);
 
   /* run everything */
 
@@ -84,8 +103,8 @@ int Simulator::run ()
   TLorentzVector *pBeam_lab = new TLorentzVector(0.,0.,0.,0.);
   TLorentzVector *pTarget_lab = new TLorentzVector(0.,0.,0.,0.);
 
-  pBeam_lab->SetPxPyPzE(0.,0.,Ebeam_lab,sqrt(Ebeam_lab*Ebeam_lab+mass_e*mass_e));
-  pTarget_lab->SetPxPyPzE(0.,0.,Etarget_lab,sqrt(Etarget_lab*Etarget_lab+mass_p*mass_p));
+  pBeam_lab->SetPxPyPzE(0.,0.,Ebeam_lab,sqrt(Ebeam_lab*Ebeam_lab+simglobals::mass_e*simglobals::mass_e));
+  pTarget_lab->SetPxPyPzE(0.,0.,Etarget_lab,sqrt(Etarget_lab*Etarget_lab+simglobals::mass_p*simglobals::mass_p));
 
   TLorentzVector *pBeam_prest = (TLorentzVector*)pBeam_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
   TLorentzVector *pTarget_prest = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
@@ -99,7 +118,7 @@ int Simulator::run ()
   Double_t Ebeam = pBeam_prest->E();
   /* pTarget_prest->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0 */
   Double_t Etarget = 0;
-  pTarget_prest->SetPxPyPzE(0.,0.,0.,mass_p);
+  pTarget_prest->SetPxPyPzE(0.,0.,0.,simglobals::mass_p);
 
   /* Monitoring output statements */
   cout << "Energies in LABORATORY  FRAME: " << pBeam_lab->E() << " GeV (e) -> " << pTarget_lab->E() << " GeV (p) " << endl;
@@ -171,14 +190,14 @@ int Simulator::run ()
     Double_t mass[10];
 
     TGenPhaseSpace *gen1 = new TGenPhaseSpace();
-    mass[0] = mass_e;
-    mass[1] = mass_e;
+    mass[0] = simglobals::mass_e;
+    mass[1] = simglobals::mass_e;
 
     Double_t mass_meson = 0;
     if ( meson_type == "jpsi")
-      mass_meson = mass_jpsi;
+      mass_meson = simglobals::mass_jpsi;
     else if ( meson_type == "upsilon" )
-      mass_meson = mass_upsilon;
+      mass_meson = simglobals::mass_upsilon;
 
     /* kinematics 4-vectors in "proton at rest" frame */
     TLorentzVector *ps_prest = new TLorentzVector(0.,0.,0.,0.);
@@ -328,13 +347,13 @@ int Simulator::run ()
         //sample electron's angle and momentum
         //       p_e = gRandom->Uniform(0.5,3.0);
         p_e = gRandom->Uniform(0.,p_e_max);
-        //       theta_e = acos(gRandom->Uniform(0.85,cos(8./DEG)));
-        //       theta_e = acos(gRandom->Uniform(cos(40./DEG),cos(0./DEG))); //random selection in solid angle need to go with cos(theta)
+        //       theta_e = acos(gRandom->Uniform(0.85,cos(8./simglobals::DEG)));
+        //       theta_e = acos(gRandom->Uniform(cos(40./simglobals::DEG),cos(0./simglobals::DEG))); //random selection in solid angle need to go with cos(theta)
         theta_e = acos(gRandom->Uniform(-1,1)); //random selection in solid angle need to go with cos(theta)
 	eta_e = -1*log( tan( theta_e / 2.0 ) );
         phi_e = gRandom->Uniform(0.,2.*3.1415926);
 
-        p4_ep_prest->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
+        p4_ep_prest->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+simglobals::mass_e*simglobals::mass_e));
 
         *ps_prest = *pBeam_prest + *pTarget_prest;
 
@@ -343,28 +362,28 @@ int Simulator::run ()
         Q2 = -pq_prest->M2();
         *ps1_prest = *ps_prest - *p4_ep_prest;
 
-        // ps1_prest->SetPxPyPzE(0,0,11,sqrt(11*11+mass_p*mass_p)+mass_meson);
+        // ps1_prest->SetPxPyPzE(0,0,11,sqrt(11*11+simglobals::mass_p*simglobals::mass_p)+mass_meson);
 
         //judge whether the event pass the kinematics
-        if (ps1_prest->M2() > pow(mass_meson+mass_p,2)){
+        if (ps1_prest->M2() > pow(mass_meson+simglobals::mass_p,2)){
 
           //sample proton solid angle;
-          //    theta_p = acos(gRandom->Uniform(0.85,cos(8./DEG)));
-          //    theta_p = acos(gRandom->Uniform(cos(40./DEG),cos(0./DEG))); //random selection in solid angle need to go with cos(theta)
+          //    theta_p = acos(gRandom->Uniform(0.85,cos(8./simglobals::DEG)));
+          //    theta_p = acos(gRandom->Uniform(cos(40./simglobals::DEG),cos(0./simglobals::DEG))); //random selection in solid angle need to go with cos(theta)
           theta_p = acos(gRandom->Uniform(-1,1)); //random selection in solid angle need to go with cos(theta)
           phi_p = gRandom->Uniform(0.,2.*3.1415926);
 
           //solve recoil proton mom
           TVector3 p3_p(sin(theta_p)*cos(phi_p),sin(theta_p)*sin(phi_p),cos(theta_p));
-          Double_t aa = (ps1_prest->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
+          Double_t aa = (ps1_prest->M2()+simglobals::mass_p*simglobals::mass_p-mass_meson*mass_meson)/2.;
           Double_t bb = ps1_prest->E();
           TVector3 p3_s(ps1_prest->Px(),ps1_prest->Py(),ps1_prest->Pz());
           Double_t cc = -p3_p.Dot(p3_s);
           Double_t sol[2];
 
-          if (pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*mass_p*mass_p-aa*aa)>=0.){
-            sol[0] = (-2*aa*cc+sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*mass_p*mass_p-aa*aa)))/2./(bb*bb-cc*cc);
-            sol[1] = (-2*aa*cc-sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*mass_p*mass_p-aa*aa)))/2./(bb*bb-cc*cc);
+          if (pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*simglobals::mass_p*simglobals::mass_p-aa*aa)>=0.){
+            sol[0] = (-2*aa*cc+sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*simglobals::mass_p*simglobals::mass_p-aa*aa)))/2./(bb*bb-cc*cc);
+            sol[1] = (-2*aa*cc-sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*simglobals::mass_p*simglobals::mass_p-aa*aa)))/2./(bb*bb-cc*cc);
 
             if (sol[0]>=0||sol[1]>=0){
 
@@ -382,7 +401,7 @@ int Simulator::run ()
               for (Int_t j=0;j!=2;j++){
                 p_p = sol[j];
                 if (p_p>0){
-                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps_prest)*cos(phi_ps_prest),p_p*sin(theta_ps_prest)*sin(phi_ps_prest),p_p*cos(theta_ps_prest),sqrt(p_p*p_p+mass_p*mass_p));
+                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps_prest)*cos(phi_ps_prest),p_p*sin(theta_ps_prest)*sin(phi_ps_prest),p_p*cos(theta_ps_prest),sqrt(p_p*p_p+simglobals::mass_p*simglobals::mass_p));
                   *p4_jpsi_prest = *ps1_prest-*p4_recoil_prest;
 
                   if (p4_jpsi_prest->M()>0.){
@@ -391,45 +410,45 @@ int Simulator::run ()
                     p4_je1_prest = gen1->GetDecay(0);
                     p4_je2_prest = gen1->GetDecay(1);
 
-                    theta_e = p4_ep_prest->Theta()*DEG;
+                    theta_e = p4_ep_prest->Theta()*simglobals::DEG;
 		    eta_e = p4_ep_prest->PseudoRapidity();
-                    phi_e = p4_ep_prest->Phi()*DEG;
+                    phi_e = p4_ep_prest->Phi()*simglobals::DEG;
 
-                    theta_p = p4_recoil_prest->Theta()*DEG;
-                    phi_p = p4_recoil_prest->Phi()*DEG;
+                    theta_p = p4_recoil_prest->Theta()*simglobals::DEG;
+                    phi_p = p4_recoil_prest->Phi()*simglobals::DEG;
 
                     p_jpsi = p4_jpsi_prest->P();
-                    theta_jpsi = p4_jpsi_prest->Theta()*DEG;
-                    phi_jpsi = p4_jpsi_prest->Phi()*DEG;
+                    theta_jpsi = p4_jpsi_prest->Theta()*simglobals::DEG;
+                    phi_jpsi = p4_jpsi_prest->Phi()*simglobals::DEG;
 
                     p_je1 = p4_je1_prest->P();
-                    theta_je1 = p4_je1_prest->Theta()*DEG;
-                    phi_je1 = p4_je1_prest->Phi()*DEG;
+                    theta_je1 = p4_je1_prest->Theta()*simglobals::DEG;
+                    phi_je1 = p4_je1_prest->Phi()*simglobals::DEG;
 
                     p_je2 = p4_je2_prest->P();
-                    theta_je2 = p4_je2_prest->Theta()*DEG;
-                    phi_je2 = p4_je2_prest->Phi()*DEG;
+                    theta_je2 = p4_je2_prest->Theta()*simglobals::DEG;
+                    phi_je2 = p4_je2_prest->Phi()*simglobals::DEG;
 
                     *pt_prest = *p4_recoil_prest - *pTarget_prest;
                     t = -pt_prest->M2();
 
                     R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
                     //R defination and parameter a and n are from eq 18 of "R. Fiore et al. Exclusive Jpsi electroproduction in a dual model. Phys. Rev.,D80:116001, 2009"
-                    theta_q = pq_prest->Theta()*DEG;
+                    theta_q = pq_prest->Theta()*simglobals::DEG;
                     q = pq_prest->P();
-                    W = sqrt(pow(mass_p + pq_prest->E(),2)-pow(pq_prest->P(),2));
-                    Keq = (W*W-mass_p*mass_p)/2./mass_p;
-                    epsilon = 1./(1+2*q*q/Q2*pow(tan(theta_e/DEG/2.),2));
+                    W = sqrt(pow(simglobals::mass_p + pq_prest->E(),2)-pow(pq_prest->P(),2));
+                    Keq = (W*W-simglobals::mass_p*simglobals::mass_p)/2./simglobals::mass_p;
+                    epsilon = 1./(1+2*q*q/Q2*pow(tan(theta_e/simglobals::DEG/2.),2));
                     Gamma = alpha/2./3.1415926/3.1415926*p_e/Ebeam*Keq/Q2/(1.-epsilon);
                     r= epsilon*R/(1.+epsilon*R);
 
-                    // J = fabs((pq_prest->E()+mass_p-q*p4_recoil_prest->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
-                    //     /(2.*mass_p*q*p_p*(cos(theta_q/DEG)*tan(theta_p/DEG)-sin(theta_q/DEG)*sin((phi_p-phi_e+180.)/DEG))));
-                    // cout << aa - bb*sqrt(p_p*p_p+mass_p*mass_p)-cc*p_p << endl;
+                    // J = fabs((pq_prest->E()+simglobals::mass_p-q*p4_recoil_prest->E()/p_p*(cos(theta_q/simglobals::DEG)*cos(theta_p/simglobals::DEG)+sin(theta_q/simglobals::DEG)*sin(theta_p/simglobals::DEG)*sin((phi_p-phi_e+180.)/simglobals::DEG))*tan(theta_q/simglobals::DEG))
+                    //     /(2.*simglobals::mass_p*q*p_p*(cos(theta_q/simglobals::DEG)*tan(theta_p/simglobals::DEG)-sin(theta_q/simglobals::DEG)*sin((phi_p-phi_e+180.)/simglobals::DEG))));
+                    // cout << aa - bb*sqrt(p_p*p_p+simglobals::mass_p*simglobals::mass_p)-cc*p_p << endl;
 
-                    Double_t dEpdcp=fabs((ps1_prest->Pz()-(ps1_prest->Px()*cos(phi_p/DEG)+ps1_prest->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
+                    Double_t dEpdcp=fabs((ps1_prest->Pz()-(ps1_prest->Px()*cos(phi_p/simglobals::DEG)+ps1_prest->Py()*sin(phi_p/simglobals::DEG))*cos(theta_p/simglobals::DEG)/sin(theta_p/simglobals::DEG))*p_p/(bb+cc*sqrt(p_p*p_p+simglobals::mass_p*simglobals::mass_p)/p_p));
 
-                    J = 2 * mass_p * dEpdcp;
+                    J = 2 * simglobals::mass_p * dEpdcp;
 
                     //go to JPsi at rest frame
                     TVector3 beta = p4_jpsi_prest->Vect();
@@ -449,14 +468,14 @@ int Simulator::run ()
 
                     a1.RotateUz(a2.Unit());
                     a3.RotateUz(a2.Unit());
-                    theta_cm = a1.Theta()*DEG;//p4_je1_jpsirest->Theta()*DEG;
-                    phi_cm = a1.Phi()*DEG-a3.Phi()*DEG;
+                    theta_cm = a1.Theta()*simglobals::DEG;//p4_je1_jpsirest->Theta()*simglobals::DEG;
+                    phi_cm = a1.Phi()*simglobals::DEG-a3.Phi()*simglobals::DEG;
                     if (phi_cm<0.) phi_cm+=360;
                     if (phi_cm>360) phi_cm-=360;
-                    // phi_cm = p4_je1_jpsirest->Phi()*DEG;
+                    // phi_cm = p4_je1_jpsirest->Phi()*simglobals::DEG;
                     //theta_cm = 0.;
 
-                    weight_decay = 3./2./4./3.1415926*(1-r + (3*r-1)*pow(cos(theta_cm/DEG),2));
+                    weight_decay = 3./2./4./3.1415926*(1-r + (3*r-1)*pow(cos(theta_cm/simglobals::DEG),2));
                     //            cout << weight_decay << endl;
                     //eq 92 of "K. Schilling and G. Wolf. How to analyze vector meson production in inelastic lepton scattering. Nucl. Phys., B61:381, 1973.",
                     // eq 32 and 31 from K. Schilling, P. Seyboth and G. Wolf, "ON THE ANALYSIS OF VECTOR-MESON PRODUCTION BY POLARIZED PHOTONS"  NucL Phys. B15 (1970) 397, B18 (1970) 332.
@@ -466,8 +485,8 @@ int Simulator::run ()
 
                     // calculate tmin
                     *ps2_prest = *pq_prest + *pTarget_prest;
-                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
-                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
+                    tmin = -1*t0lim(-sqrt(Q2),simglobals::mass_p, mass_meson, simglobals::mass_p, ps2_prest->M2());
+                    tmax = -1*t1lim(-sqrt(Q2),simglobals::mass_p, mass_meson, simglobals::mass_p, ps2_prest->M2());
 
 
                     //differential crossection in nb/(phasespace cell)		      
@@ -507,29 +526,29 @@ int Simulator::run ()
 
 		    /* re-calculate final state particle parameters */
 		    p_e = p4_ep_lab->P();
-                    theta_e = p4_ep_lab->Theta()*DEG;
+                    theta_e = p4_ep_lab->Theta()*simglobals::DEG;
                     eta_e = p4_ep_lab->PseudoRapidity();
-                    phi_e = p4_ep_lab->Phi()*DEG;
+                    phi_e = p4_ep_lab->Phi()*simglobals::DEG;
 
 		    p_p = p4_recoil_lab->P();
-                    theta_p = p4_recoil_lab->Theta()*DEG;
+                    theta_p = p4_recoil_lab->Theta()*simglobals::DEG;
                     eta_p = p4_recoil_lab->PseudoRapidity();
-                    phi_p = p4_recoil_lab->Phi()*DEG;
+                    phi_p = p4_recoil_lab->Phi()*simglobals::DEG;
 
                     p_jpsi = p4_jpsi_lab->P();
-                    theta_jpsi = p4_jpsi_lab->Theta()*DEG;
+                    theta_jpsi = p4_jpsi_lab->Theta()*simglobals::DEG;
                     eta_jpsi = p4_jpsi_lab->PseudoRapidity();
-                    phi_jpsi = p4_jpsi_lab->Phi()*DEG;
+                    phi_jpsi = p4_jpsi_lab->Phi()*simglobals::DEG;
 
                     p_je1 = p4_je1_lab->P();
-                    theta_je1 = p4_je1_lab->Theta()*DEG;
+                    theta_je1 = p4_je1_lab->Theta()*simglobals::DEG;
                     eta_je1 = p4_je1_lab->PseudoRapidity();
-                    phi_je1 = p4_je1_lab->Phi()*DEG;
+                    phi_je1 = p4_je1_lab->Phi()*simglobals::DEG;
 
                     p_je2 = p4_je2_lab->P();
-                    theta_je2 = p4_je2_lab->Theta()*DEG;
+                    theta_je2 = p4_je2_lab->Theta()*simglobals::DEG;
                     eta_je2 = p4_je2_lab->PseudoRapidity();
-                    phi_je2 = p4_je2_lab->Phi()*DEG;
+                    phi_je2 = p4_je2_lab->Phi()*simglobals::DEG;
 		    /* END boost final state particles back to laboratory frame */
 
 		    /* Fill tree */
@@ -567,7 +586,7 @@ int Simulator::run ()
         //       cout << Gbeam << " " << Gflux << endl;
 
         pBeam_prest->SetPxPyPzE(0.,0.,Gbeam,Gbeam);
-        pTarget_prest->SetPxPyPzE(0.,0.,0.,mass_p);
+        pTarget_prest->SetPxPyPzE(0.,0.,0.,simglobals::mass_p);
 
         *ps_prest = *pBeam_prest + *pTarget_prest;
 
@@ -577,23 +596,23 @@ int Simulator::run ()
         *ps1_prest = *ps_prest;
 
         //judge whether the event pass the kinematics
-        if (ps1_prest->M2() > pow(mass_meson+mass_p,2)){
+        if (ps1_prest->M2() > pow(mass_meson+simglobals::mass_p,2)){
           //sample proton solid angle;
-          //    theta_p = acos(gRandom->Uniform(0.85,cos(8./DEG)));
+          //    theta_p = acos(gRandom->Uniform(0.85,cos(8./simglobals::DEG)));
           theta_p = acos(gRandom->Uniform(-1,1)); //random selection in solid angle need to go with cos(theta)
           phi_p = gRandom->Uniform(0.,2.*3.1415926);
 
           //solve recoil proton mom
           TVector3 p3_p(sin(theta_p)*cos(phi_p),sin(theta_p)*sin(phi_p),cos(theta_p));
-          Double_t aa = (ps1_prest->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
+          Double_t aa = (ps1_prest->M2()+simglobals::mass_p*simglobals::mass_p-mass_meson*mass_meson)/2.;
           Double_t bb = ps1_prest->E();
           TVector3 p3_s(ps1_prest->Px(),ps1_prest->Py(),ps1_prest->Pz());
           Double_t cc = -p3_p.Dot(p3_s);
           Double_t sol[2];
 
-          if (pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*mass_p*mass_p-aa*aa)>=0.){
-            sol[0] = (-2*aa*cc+sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*mass_p*mass_p-aa*aa)))/2./(bb*bb-cc*cc);
-            sol[1] = (-2*aa*cc-sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*mass_p*mass_p-aa*aa)))/2./(bb*bb-cc*cc);
+          if (pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*simglobals::mass_p*simglobals::mass_p-aa*aa)>=0.){
+            sol[0] = (-2*aa*cc+sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*simglobals::mass_p*simglobals::mass_p-aa*aa)))/2./(bb*bb-cc*cc);
+            sol[1] = (-2*aa*cc-sqrt(pow(2.*aa*cc,2)-4.*(bb*bb-cc*cc)*(bb*bb*simglobals::mass_p*simglobals::mass_p-aa*aa)))/2./(bb*bb-cc*cc);
 
             if (sol[0]>=0||sol[1]>=0){
 
@@ -613,7 +632,7 @@ int Simulator::run ()
               for (Int_t j=0;j!=2;j++){
                 p_p = sol[j];
                 if (p_p>0){
-                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps_prest)*cos(phi_ps_prest),p_p*sin(theta_ps_prest)*sin(phi_ps_prest),p_p*cos(theta_ps_prest),sqrt(p_p*p_p+mass_p*mass_p));
+                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps_prest)*cos(phi_ps_prest),p_p*sin(theta_ps_prest)*sin(phi_ps_prest),p_p*cos(theta_ps_prest),sqrt(p_p*p_p+simglobals::mass_p*simglobals::mass_p));
                   *p4_jpsi_prest = *ps1_prest-*p4_recoil_prest;
 
                   if (p4_jpsi_prest->M()>0.){
@@ -622,43 +641,43 @@ int Simulator::run ()
                     p4_je1_prest = gen1->GetDecay(0);
                     p4_je2_prest = gen1->GetDecay(1);
 
-                    theta_e = p4_ep_prest->Theta()*DEG;
-                    phi_e = p4_ep_prest->Phi()*DEG;
+                    theta_e = p4_ep_prest->Theta()*simglobals::DEG;
+                    phi_e = p4_ep_prest->Phi()*simglobals::DEG;
 
-                    theta_p = p4_recoil_prest->Theta()*DEG;
-                    phi_p = p4_recoil_prest->Phi()*DEG;
+                    theta_p = p4_recoil_prest->Theta()*simglobals::DEG;
+                    phi_p = p4_recoil_prest->Phi()*simglobals::DEG;
 
                     p_jpsi = p4_jpsi_prest->P();
-                    theta_jpsi = p4_jpsi_prest->Theta()*DEG;
-                    phi_jpsi = p4_jpsi_prest->Phi()*DEG;
+                    theta_jpsi = p4_jpsi_prest->Theta()*simglobals::DEG;
+                    phi_jpsi = p4_jpsi_prest->Phi()*simglobals::DEG;
 
                     p_je1 = p4_je1_prest->P();
-                    theta_je1 = p4_je1_prest->Theta()*DEG;
-                    phi_je1 = p4_je1_prest->Phi()*DEG;
+                    theta_je1 = p4_je1_prest->Theta()*simglobals::DEG;
+                    phi_je1 = p4_je1_prest->Phi()*simglobals::DEG;
 
                     p_je2 = p4_je2_prest->P();
-                    theta_je2 = p4_je2_prest->Theta()*DEG;
-                    phi_je2 = p4_je2_prest->Phi()*DEG;
+                    theta_je2 = p4_je2_prest->Theta()*simglobals::DEG;
+                    phi_je2 = p4_je2_prest->Phi()*simglobals::DEG;
 
                     *pt_prest = *p4_recoil_prest - *pTarget_prest;
                     t = -pt_prest->M2();
 
                     R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
-                    theta_q = pq_prest->Theta()*DEG;
+                    theta_q = pq_prest->Theta()*simglobals::DEG;
                     q = pq_prest->P();
-                    W = sqrt(pow(mass_p + pq_prest->E(),2)-pow(pq_prest->P(),2));
-                    Keq = (W*W-mass_p*mass_p)/2./mass_p;
-                    //            epsilon = 1./(1+2*q*q/Q2*pow(tan(theta_e/DEG/2.),2));
+                    W = sqrt(pow(simglobals::mass_p + pq_prest->E(),2)-pow(pq_prest->P(),2));
+                    Keq = (W*W-simglobals::mass_p*simglobals::mass_p)/2./simglobals::mass_p;
+                    //            epsilon = 1./(1+2*q*q/Q2*pow(tan(theta_e/simglobals::DEG/2.),2));
                     //            Gamma = alpha/2./3.1415926/3.1415926*p_e/Ebeam*Keq/Q2/(1.-epsilon);
                     //            r= epsilon*R/(1.+epsilon*R);
 
-                    // J = fabs((pq_prest->E()+mass_p-q*p4_recoil->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
-                    //     /(2.*mass_p*q*p_p*(cos(theta_q/DEG)*tan(theta_p/DEG)-sin(theta_q/DEG)*sin((phi_p-phi_e+180.)/DEG))));
-                    // cout << aa - bb*sqrt(p_p*p_p+mass_p*mass_p)-cc*p_p << endl;
+                    // J = fabs((pq_prest->E()+simglobals::mass_p-q*p4_recoil->E()/p_p*(cos(theta_q/simglobals::DEG)*cos(theta_p/simglobals::DEG)+sin(theta_q/simglobals::DEG)*sin(theta_p/simglobals::DEG)*sin((phi_p-phi_e+180.)/simglobals::DEG))*tan(theta_q/simglobals::DEG))
+                    //     /(2.*simglobals::mass_p*q*p_p*(cos(theta_q/simglobals::DEG)*tan(theta_p/simglobals::DEG)-sin(theta_q/simglobals::DEG)*sin((phi_p-phi_e+180.)/simglobals::DEG))));
+                    // cout << aa - bb*sqrt(p_p*p_p+simglobals::mass_p*simglobals::mass_p)-cc*p_p << endl;
 
-                    Double_t dEpdcp=fabs((ps1_prest->Pz()-(ps1_prest->Px()*cos(phi_p/DEG)+ps1_prest->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
-                    //cout << J << " " << 1./mass_p/2./dEpdcp<< " " << dEpdcp << " " << p_p << " " << bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p << endl;
-                    J = 2 * mass_p * dEpdcp;
+                    Double_t dEpdcp=fabs((ps1_prest->Pz()-(ps1_prest->Px()*cos(phi_p/simglobals::DEG)+ps1_prest->Py()*sin(phi_p/simglobals::DEG))*cos(theta_p/simglobals::DEG)/sin(theta_p/simglobals::DEG))*p_p/(bb+cc*sqrt(p_p*p_p+simglobals::mass_p*simglobals::mass_p)/p_p));
+                    //cout << J << " " << 1./simglobals::mass_p/2./dEpdcp<< " " << dEpdcp << " " << p_p << " " << bb+cc*sqrt(p_p*p_p+simglobals::mass_p*simglobals::mass_p)/p_p << endl;
+                    J = 2 * simglobals::mass_p * dEpdcp;
 
                     //go to JPsi at rest frame
                     TVector3 beta = p4_jpsi_prest->Vect();
@@ -678,15 +697,15 @@ int Simulator::run ()
 
                     a1.RotateUz(a2.Unit());
                     a3.RotateUz(a2.Unit());
-                    theta_cm = a1.Theta()*DEG;//p4_je1_jpsirest->Theta()*DEG;
-                    phi_cm = a1.Phi()*DEG-a3.Phi()*DEG;
+                    theta_cm = a1.Theta()*simglobals::DEG;//p4_je1_jpsirest->Theta()*simglobals::DEG;
+                    phi_cm = a1.Phi()*simglobals::DEG-a3.Phi()*simglobals::DEG;
                     if (phi_cm<0.) phi_cm+=360;
                     if (phi_cm>360) phi_cm-=360;
-                    // phi_cm = p4_je1_jpsirest->Phi()*DEG;
+                    // phi_cm = p4_je1_jpsirest->Phi()*simglobals::DEG;
                     //theta_cm = 0.;
 
                     r=0; //real photon has no transverse component
-                    weight_decay = 3./2./4./3.1415916*(1-r + (3*r-1)*pow(cos(theta_cm/DEG),2));
+                    weight_decay = 3./2./4./3.1415916*(1-r + (3*r-1)*pow(cos(theta_cm/simglobals::DEG),2));
                     //            cout << weight_decay << endl;
                     //eq 92 of "K. Schilling and G. Wolf. How to analyze vector meson production in inelastic lepton scattering. Nucl. Phys., B61:381, 1973.",
                     // eq 32 and 31 from K. Schilling, P. Seyboth and G. Wolf, "ON THE ANALYSIS OF VECTOR-MESON PRODUCTION BY POLARIZED PHOTONS"  NucL Phys. B15 (1970) 397, B18 (1970) 332.
@@ -696,8 +715,8 @@ int Simulator::run ()
 
                     // calculate tmin
                     *ps2_prest = *pq_prest + *pTarget_prest;
-                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
-                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
+                    tmin = -1*t0lim(-sqrt(Q2),simglobals::mass_p, mass_meson, simglobals::mass_p, ps2_prest->M2());
+                    tmax = -1*t1lim(-sqrt(Q2),simglobals::mass_p, mass_meson, simglobals::mass_p, ps2_prest->M2());
 
 
                     //differential crossection in nb/(phasespace cell)
@@ -829,29 +848,28 @@ int main (Int_t argc, char *argv[])
     for(Int_t i = 1; i != argc; i++){
       switch(argv[i][1]){
       case 'n':
-	sim.nevents= int(atof(&argv[i][2]));
+	sim.set_number_events( int(atof(&argv[i][2])) );
 	break;
       case 't':
-	type = &argv[i][2];
-	if (type=="e") {sim.Is_e=true;}
-	else if (type=="g") {sim.Is_g=true;}
-	else { cout << "wrong type" << endl; return 0; }
+	if ( sim.set_process_type( &argv[i][2] ) )
+	  return 1;
 	break;
       case 'b':
-	sim.Ebeam_lab = atof(&argv[i][2]);
+	sim.set_lepton_energy( atof(&argv[i][2]) );
 	break;
       case 'p':
-	sim.Etarget_lab = atof(&argv[i][2]);
+	sim.set_hadron_energy( atof(&argv[i][2]) );
 	break;
       case 'm':
-	sim.meson_type = TString(&argv[i][2]);
+	if ( sim.set_meson_type( &argv[i][2] ) )
+	  return 1;
 	break;
       case 'o':
-	sim.output_root_file = TString(&argv[i][2]);
+	sim.set_output_file( TString(&argv[i][2]) );
 	break;
       default:
 	cout << "Warning!!!! Unknown option: " << &argv[i][1] << endl;
-	return 0;
+	return 1;
 	break;
       }
     }
