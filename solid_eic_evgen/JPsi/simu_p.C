@@ -1,3 +1,5 @@
+#include "simu_p.h"
+
 #include <TApplication.h>
 #include <TTree.h>
 #include <TFile.h>
@@ -11,7 +13,7 @@
 #include <TF1.h>
 #include <TCut.h>
 #include <TLorentzVector.h>
-#include <TSystem.h>
+
 #include <TGenPhaseSpace.h>
 #include <TRandom.h>
 #include <TVector.h>
@@ -27,6 +29,7 @@
 
 using namespace std;
 
+/* gloabl variables - @TODO: Move these elsewhere */
 const Double_t DEG = 180./3.1415926;
 
 const Double_t mass_e = 0.511e-3;
@@ -37,110 +40,78 @@ const Double_t mass_jpsi = 3.097;
 const Double_t mass_upsilon = 9.460;
 // const Double_t width_upsilon = 54.0e-6;
 
-TLorentzVector pSpec;
+Simulator::Simulator(){
 
-Float_t t0lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s);
-Float_t t1lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s);
-Double_t fun_2g(Double_t x, Double_t t, Double_t M);
-Double_t fun_23g(Double_t x, Double_t t, Double_t M);
+  seed = 0;
 
-int main (Int_t argc, char *argv[])
+  nevents=1000000; //number of events
+
+  Ebeam_lab=11.0; // Electron Beam Energy in labortory frame
+  Etarget_lab=0.0; // Proton Beam Energy in labortory frame
+
+  output_root_file = "output.root";
+
+  meson_type=("jpsi");
+  acceptance_root_file = "no";
+
+  Is_e=false;
+  Is_g=false;
+
+  Gbeam_min = 7.5;
+}
+
+int Simulator::run ()
 {
-  gRandom->SetSeed(0);
+  cout << "Running Simulator..." << endl;
 
-  Int_t nevents=1000000; //number of events
+  gRandom->SetSeed(seed);
 
-  Double_t Ebeam_lab=11.0; // Electron Beam Energy in labortory frame
-  Double_t Etarget_lab=0.0; // Proton Beam Energy in labortory frame
-
-  TString output_root_file("output.root");
-
-  TString meson_type=("jpsi");
-  string type;
-  string acceptance_root_file="no";
-
-  bool Is_e=false,Is_g=false;
-
-  if (argc==1){
-    cout << "./simu_p -n[nevents as integer like 1000000] -t[e for electroproduction,g for photoproduction] -b[Ebeam in GeV] -o[output_root_file]" << endl;
-  }
-  else{
-
-    for(Int_t i = 1; i != argc; i++){
-      switch(argv[i][1]){
-      case 'n':
-        nevents= int(atof(&argv[i][2]));
-        break;
-      case 't':
-        type = &argv[i][2];
-        if (type=="e") {Is_e=true;}
-        else if (type=="g") {Is_g=true;}
-        else { cout << "wrong type" << endl; return 0; }
-        break;
-      case 'b':
-        Ebeam_lab = atof(&argv[i][2]);
-        break;
-      case 'p':
-        Etarget_lab = atof(&argv[i][2]);
-        break;
-      case 'm':
-        meson_type = TString(&argv[i][2]);
-        break;
-      case 'o':
-        output_root_file = TString(&argv[i][2]);
-        break;
-      default:
-        cout << "Warning!!!! Unknown option: " << &argv[i][1] << endl;
-        return 0;
-        break;
-      }
+  /* Check selected meson type */
+  if ( meson_type == "jpsi" )
+    cout << "Select meson production: J/Psi" << endl;
+  else if ( meson_type == "upsilon" )
+    cout << "Select meson production: Upsilon" << endl;
+  else
+    {
+      cout << "ERROR: Unknown meson type " << meson_type << endl;
+      return(1);
     }
 
-    double Gbeam_min=7.5;
 
-    /* Check selected meson type */
-    if ( meson_type == "jpsi" )
-      cout << "Select meson production: J/Psi" << endl;
-    else if ( meson_type == "upsilon" )
-      cout << "Select meson production: Upsilon" << endl;
-    else
-      {
-	cout << "ERROR: Unknown meson type " << meson_type << endl;
-	return(1);
-      }
+  /* run everything */
 
-    /* Transition from 'laboratory frame' to 'target rest' frame*/
-    TLorentzVector *pBeam_lab = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *pTarget_lab = new TLorentzVector(0.,0.,0.,0.);
+  /* Transition from 'laboratory frame' to 'target rest' frame*/
+  TLorentzVector *pBeam_lab = new TLorentzVector(0.,0.,0.,0.);
+  TLorentzVector *pTarget_lab = new TLorentzVector(0.,0.,0.,0.);
 
-    pBeam_lab->SetPxPyPzE(0.,0.,Ebeam_lab,sqrt(Ebeam_lab*Ebeam_lab+mass_e*mass_e));
-    pTarget_lab->SetPxPyPzE(0.,0.,Etarget_lab,sqrt(Etarget_lab*Etarget_lab+mass_p*mass_p));
+  pBeam_lab->SetPxPyPzE(0.,0.,Ebeam_lab,sqrt(Ebeam_lab*Ebeam_lab+mass_e*mass_e));
+  pTarget_lab->SetPxPyPzE(0.,0.,Etarget_lab,sqrt(Etarget_lab*Etarget_lab+mass_p*mass_p));
 
-    TLorentzVector *pBeam_prest = (TLorentzVector*)pBeam_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *pTarget_prest = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
+  TLorentzVector *pBeam_prest = (TLorentzVector*)pBeam_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
+  TLorentzVector *pTarget_prest = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
 
-    /* determine beta to move to 'proton at rest' reference frame */
-    TVector3 beta_lab_protonrest = pTarget_lab->Vect();
-    beta_lab_protonrest *= -1./pTarget_lab->E();
-    pBeam_prest->Boost(beta_lab_protonrest);
-    pTarget_prest->Boost(beta_lab_protonrest);
+  /* determine beta to move to 'proton at rest' reference frame */
+  TVector3 beta_lab_protonrest = pTarget_lab->Vect();
+  beta_lab_protonrest *= -1./pTarget_lab->E();
+  pBeam_prest->Boost(beta_lab_protonrest);
+  pTarget_prest->Boost(beta_lab_protonrest);
 
-    Double_t Ebeam = pBeam_prest->E();
-    /* pTarget_prest->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0 */
-    Double_t Etarget = 0;
-    pTarget_prest->SetPxPyPzE(0.,0.,0.,mass_p);
+  Double_t Ebeam = pBeam_prest->E();
+  /* pTarget_prest->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0 */
+  Double_t Etarget = 0;
+  pTarget_prest->SetPxPyPzE(0.,0.,0.,mass_p);
 
-    /* Monitoring output statements */
-    cout << "Energies in LABORATORY  FRAME: " << pBeam_lab->E() << " GeV (e) -> " << pTarget_lab->E() << " GeV (p) " << endl;
-    cout << "Energies in TARGET REST FRAME: " << pBeam_prest->E() << " GeV (e) -> " << pTarget_prest->E() << " GeV (p) " << endl;
+  /* Monitoring output statements */
+  cout << "Energies in LABORATORY  FRAME: " << pBeam_lab->E() << " GeV (e) -> " << pTarget_lab->E() << " GeV (p) " << endl;
+  cout << "Energies in TARGET REST FRAME: " << pBeam_prest->E() << " GeV (e) -> " << pTarget_prest->E() << " GeV (p) " << endl;
 
-    cout << "********************" << endl;
+  cout << "********************" << endl;
 
-    cout << "Lab frame electron 4-vector before boosts: ("
-	 << pBeam_lab->Px() << ", "
-	 << pBeam_lab->Py() << ", "
-	 << pBeam_lab->Pz() << ", "
-	 << pBeam_lab->E() << ")" << endl;
+  cout << "Lab frame electron 4-vector before boosts: ("
+       << pBeam_lab->Px() << ", "
+       << pBeam_lab->Py() << ", "
+       << pBeam_lab->Pz() << ", "
+       << pBeam_lab->E() << ")" << endl;
 
     cout << "Proton Rest frame electron 4-vector: ("
 	 << pBeam_prest->Px() << ", "
@@ -759,11 +730,12 @@ int main (Int_t argc, char *argv[])
 
     file->Write();
     file->Close();
-  }
-  return 0;
+
+    return 0;
 }
 
-Double_t fun_2g(Double_t x, Double_t t, Double_t M){
+
+Double_t Simulator::fun_2g(Double_t x, Double_t t, Double_t M){
   Double_t N2g = 7.5671e3;
   Double_t v = 1./16/3.1415926;
   Double_t R = 1;
@@ -774,7 +746,7 @@ Double_t fun_2g(Double_t x, Double_t t, Double_t M){
   return result;
 }
 
-Double_t fun_23g(Double_t x,Double_t t, Double_t M){
+Double_t Simulator::fun_23g(Double_t x,Double_t t, Double_t M){
   Double_t N2g = 6.499e3;
   Double_t N3g = 2.894e3;
   Double_t v = 1./16/3.1415926;
@@ -789,7 +761,7 @@ Double_t fun_23g(Double_t x,Double_t t, Double_t M){
 }
 
 
-Float_t t0lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s)
+Float_t Simulator::t0lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s)
 {
   Float_t t1,t2,t3,t4;
 
@@ -815,7 +787,7 @@ Float_t t0lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s)
   return  t1*t1 - t4*t4;
 }
 
-Float_t t1lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s)
+Float_t Simulator::t1lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s)
 {
   Float_t t1,t2,t3,t4;
   if (m1>=0){
@@ -839,3 +811,55 @@ Float_t t1lim(Float_t m1, Float_t m2,Float_t m3, Float_t m4,Float_t s)
   }
   return  t1*t1 - t4*t4;
 }
+
+
+
+int main (Int_t argc, char *argv[])
+{
+  Simulator sim;
+
+  if (argc==1)
+    {
+      cout << "./simu_p -n[nevents as integer like 1000000] -t[e for electroproduction,g for photoproduction] -b[Ebeam in GeV] -o[output_root_file]" << endl;
+    }
+  else{
+
+    string type;
+
+    for(Int_t i = 1; i != argc; i++){
+      switch(argv[i][1]){
+      case 'n':
+	sim.nevents= int(atof(&argv[i][2]));
+	break;
+      case 't':
+	type = &argv[i][2];
+	if (type=="e") {sim.Is_e=true;}
+	else if (type=="g") {sim.Is_g=true;}
+	else { cout << "wrong type" << endl; return 0; }
+	break;
+      case 'b':
+	sim.Ebeam_lab = atof(&argv[i][2]);
+	break;
+      case 'p':
+	sim.Etarget_lab = atof(&argv[i][2]);
+	break;
+      case 'm':
+	sim.meson_type = TString(&argv[i][2]);
+	break;
+      case 'o':
+	sim.output_root_file = TString(&argv[i][2]);
+	break;
+      default:
+	cout << "Warning!!!! Unknown option: " << &argv[i][1] << endl;
+	return 0;
+	break;
+      }
+    }
+  }
+    
+  sim.run();
+  return 0;
+}
+
+
+
