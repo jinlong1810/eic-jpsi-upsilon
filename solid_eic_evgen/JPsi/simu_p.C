@@ -1,9 +1,6 @@
 #include "simu_p.h"
 #include "globals.h"
 
-#include <TTree.h>
-#include <TFile.h>
-#include <TString.h>
 #include <TF1.h>
 #include <TLorentzVector.h>
 #include <TGenPhaseSpace.h>
@@ -13,6 +10,9 @@
 using namespace std;
 
 Simulator::Simulator(){
+
+  _file_out = NULL;
+  _tree_out = NULL;
 
   seed = 0;
 
@@ -29,6 +29,65 @@ Simulator::Simulator(){
   Is_g=false;
 
   Gbeam_min = 7.5;
+
+  Gbeam = 0;
+  Gflux = 0;
+
+  Q2 = 0;
+  t = 0;
+
+  minv = 0;
+  minv_prest = 0;
+  minv_beam = 0;
+
+  p_e = 0;
+  theta_e = 0;
+  phi_e = 0;
+  eta_e = 0;
+  p_p = 0;
+  theta_p = 0;
+  phi_p = 0;
+  eta_p = 0;
+  p_jpsi = 0;
+  theta_jpsi = 0;
+  phi_jpsi = 0;
+  eta_jpsi = 0;
+
+  p_je1 = 0;
+  theta_je1 = 0;
+  phi_je1 = 0;
+  eta_je1 = 0;
+  p_je2 = 0;
+  theta_je2 = 0;
+  phi_je2 = 0;
+  eta_je2 = 0;
+
+  weight_decay = 0;
+  weight = 0;
+  
+  neve = 0;
+    
+  Gamma = 0;
+  epsilon = 0;
+  Keq = 0;
+  W = 0;
+  q = 0;
+  theta_q = 0;
+  J = 0;
+  R = 0;
+  theta_cm = 0;
+  phi_cm = 0;
+  r = 0;
+
+  dxs = 0;
+  dxs_2g = 0;
+  dxs_23g = 0;
+
+  tmin = 0;
+  tmax = 0;
+
+  phasespace = 0;
+
 }
 
 
@@ -79,6 +138,9 @@ int Simulator::run ()
 
   gRandom->SetSeed(seed);
 
+  init();
+  process_event();
+
   /* run everything */
 
   /* Transition from 'laboratory frame' to 'target rest' frame*/
@@ -92,10 +154,10 @@ int Simulator::run ()
   TLorentzVector *pTarget_prest = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
 
   /* determine beta to move to 'proton at rest' reference frame */
-  TVector3 beta_lab_protonrest = pTarget_lab->Vect();
-  beta_lab_protonrest *= -1./pTarget_lab->E();
-  pBeam_prest->Boost(beta_lab_protonrest);
-  pTarget_prest->Boost(beta_lab_protonrest);
+  TVector3 beta_lab_prest = pTarget_lab->Vect();
+  beta_lab_prest *= -1./pTarget_lab->E();
+  pBeam_prest->Boost(beta_lab_prest);
+  pTarget_prest->Boost(beta_lab_prest);
 
   Double_t Ebeam = pBeam_prest->E();
   /* pTarget_prest->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0 */
@@ -122,7 +184,7 @@ int Simulator::run ()
  
     TLorentzVector *pBeam_lab_xcheck = new TLorentzVector(0.,0.,0.,0.);
     *pBeam_lab_xcheck = *pBeam_prest;
-    pBeam_lab_xcheck->Boost(-beta_lab_protonrest);
+    pBeam_lab_xcheck->Boost(-beta_lab_prest);
 
     cout << "Lab frame electron 4-vector after boosts: ("
 	 << pBeam_lab_xcheck->Px() << ", "
@@ -146,7 +208,7 @@ int Simulator::run ()
  
     TLorentzVector *pTarget_lab_xcheck = new TLorentzVector(0.,0.,0.,0.);
     *pTarget_lab_xcheck = *pTarget_prest;
-    pTarget_lab_xcheck->Boost(-beta_lab_protonrest);
+    pTarget_lab_xcheck->Boost(-beta_lab_prest);
 
     cout << "Lab frame proton 4-vector after boosts: ("
 	 << pTarget_lab_xcheck->Px() << ", "
@@ -207,106 +269,9 @@ int Simulator::run ()
     TLorentzVector *p4_recoil_jpsirest = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_q_jpsirest = new TLorentzVector(0.,0.,0.,0.);
 
-
-    /* Outut file */
-    TFile *file = new TFile(output_root_file,"RECREATE");
-    TTree *T = new TTree("T","T");
-    T->SetDirectory(file);
-
-    /* Photon energy and flux */
-    Double_t Gbeam=0,Gflux=0;
-
-    /* global event paraemters */
-    Double_t Q2,t;
-
-    /* invariant mass */
-    Double_t minv, minv_prest, minv_beam;
-
-    /* final state particle properties in laboratory frame */
-    Double_t p_e,theta_e,phi_e,eta_e;
-    Double_t p_p,theta_p,phi_p,eta_p;
-    Double_t p_jpsi, theta_jpsi,phi_jpsi,eta_jpsi;
-
-    Double_t p_je1, theta_je1, phi_je1, eta_je1;
-    Double_t p_je2, theta_je2, phi_je2, eta_je2;
-
-    /* Weights */
-    Double_t weight_decay;
-    Double_t weight;
-
-    /* Set branches */
-    T->Branch("Ebeam",&Ebeam,"data/D");
-    T->Branch("Gbeam",&Gbeam,"data/D");
-    T->Branch("Gflux",&Gflux,"data/D");
-    T->Branch("Etarget",&Etarget,"data/D");
-
-    T->Branch("weight_decay",&weight_decay,"data/D");
-    T->Branch("weight",&weight,"data/D");
-
-    T->Branch("Q2",&Q2,"data/D");
-    T->Branch("t",&t,"data/D");
-
-    T->Branch("m_inv",&minv,"data/D");
-    T->Branch("m_inv_prest",&minv_prest,"data/D");
-    T->Branch("m_inv_beam",&minv_beam,"data/D");
-
-    T->Branch("p_e",&p_e,"data/D");
-    T->Branch("theta_e",&theta_e,"data/D");
-    T->Branch("phi_e",&phi_e,"data/D");
-    T->Branch("eta_e",&eta_e,"data/D");
-
-    T->Branch("p_p",&p_p,"data/D");
-    T->Branch("theta_p",&theta_p,"data/D");
-    T->Branch("eta_p",&eta_p,"data/D");
-    T->Branch("phi_p",&phi_p,"data/D");
-
-    T->Branch("p_jpsi",&p_jpsi,"data/D");
-    T->Branch("theta_jpsi",&theta_jpsi,"data/D");
-    T->Branch("eta_jpsi",&eta_jpsi,"data/D");
-    T->Branch("phi_jpsi",&phi_jpsi,"data/D");
-
-    T->Branch("p_je1",&p_je1,"data/D");
-    T->Branch("theta_je1",&theta_je1,"data/D");
-    T->Branch("eta_je1",&eta_je1,"data/D");
-    T->Branch("phi_je1",&phi_je1,"data/D");
-
-    T->Branch("p_je2",&p_je2,"data/D");
-    T->Branch("theta_je2",&theta_je2,"data/D");
-    T->Branch("eta_je2",&eta_je2,"data/D");
-    T->Branch("phi_je2",&phi_je2,"data/D");
-
-    Int_t neve=0,neve1=0;
-    T->Branch("neve",&neve,"data/I");
+    Int_t neve1=0;
 
     /* calculation formular */
-    Double_t Gamma;
-    Double_t epsilon,Keq,W,q,theta_q;
-    Double_t J,R,theta_cm,r,phi_cm;
-
-    T->Branch("Gamma",&Gamma,"data/D");
-    T->Branch("epsilon",&epsilon,"data/D");
-    T->Branch("Keq",&Keq,"data/D");
-    T->Branch("W",&W,"data/D");
-    T->Branch("q",&q,"data/D");
-    T->Branch("theta_q",&theta_q,"data/D");
-    T->Branch("J",&J,"data/D");
-    T->Branch("R",&R,"data/D");
-    T->Branch("theta_cm",&theta_cm,"data/D");
-    T->Branch("phi_cm",&phi_cm,"data/D");
-    T->Branch("r",&r,"data/D");
-
-    Double_t dxs,dxs_2g,dxs_23g;
-    T->Branch("dxs",&dxs,"data/D");
-    T->Branch("dxs_2g",&dxs_2g,"data/D");
-    T->Branch("dxs_23g",&dxs_23g,"data/D");
-
-    Double_t tmin,tmax;
-    T->Branch("tmin",&tmin,"data/D");
-    T->Branch("tmax",&tmax,"data/D");
-
-    Double_t phasespace;
-    T->Branch("phasespace",&phasespace,"data/D");
-
     Double_t A = 0.94;
     Double_t b = -0.97;
     Double_t alpha = 1./137.;
@@ -495,11 +460,11 @@ int Simulator::run ()
 		    *p4_je2_lab = *p4_je2_prest;
 
 		    /* Boost final state particles to laboratory frame */
-		    p4_ep_lab->Boost(-1*beta_lab_protonrest);
-		    p4_recoil_lab->Boost(-1*beta_lab_protonrest);
-		    p4_jpsi_lab->Boost(-1*beta_lab_protonrest);
-		    p4_je1_lab->Boost(-1*beta_lab_protonrest);
-		    p4_je2_lab->Boost(-1*beta_lab_protonrest);
+		    p4_ep_lab->Boost(-1*beta_lab_prest);
+		    p4_recoil_lab->Boost(-1*beta_lab_prest);
+		    p4_jpsi_lab->Boost(-1*beta_lab_prest);
+		    p4_je1_lab->Boost(-1*beta_lab_prest);
+		    p4_je2_lab->Boost(-1*beta_lab_prest);
 
 		    /* Calculate invariant mass in laboratory frame */
 		    TLorentzVector p4_sum(0.,0.,0.,0.);
@@ -534,7 +499,7 @@ int Simulator::run ()
 		    /* END boost final state particles back to laboratory frame */
 
 		    /* Fill tree */
-                    T->Fill();
+                    _tree_out->Fill();
                     if (neve1%(nevents/10)==0) cout << neve1 << endl;
                     neve1++;
                     if (neve1 > nevents) qflag = 0;
@@ -706,7 +671,7 @@ int Simulator::run ()
                     dxs_2g  = fun_2g(W,t,mass_meson);
                     dxs_23g = fun_23g(W,t,mass_meson);
 
-                    T->Fill();
+                    _tree_out->Fill();
                     if (neve1%(nevents/10)==0) cout << neve1 << endl;
                     neve1++;
                     if (neve1 > nevents)  qflag = 0;
@@ -729,12 +694,119 @@ int Simulator::run ()
 
     cout << "counter " << counter[0] << " " << counter[1] << " " << counter[2] << " " << counter[3] << endl;
 
-    file->Write();
-    file->Close();
 
+    end();
     return 0;
 }
 
+
+
+/////////////
+
+
+int Simulator::init()
+{
+
+  create_output_file();
+
+  cout << "init() done" << endl;
+  return 0;
+}
+
+int Simulator::create_output_file()
+{
+  /* Outut file */
+  _file_out = new TFile(output_root_file,"RECREATE");
+  _tree_out = new TTree("T","T");
+  _tree_out->SetDirectory(_file_out);
+
+  cout << _file_out << endl;
+    
+  /* Set branches */
+  _tree_out->Branch("Etarget",&Etarget_lab,"data/D");
+  _tree_out->Branch("Ebeam",&Ebeam_lab,"data/D");
+
+  _tree_out->Branch("Gbeam",&Gbeam,"data/D");
+  _tree_out->Branch("Gflux",&Gflux,"data/D");
+
+  _tree_out->Branch("weight_decay",&weight_decay,"data/D");
+  _tree_out->Branch("weight",&weight,"data/D");
+
+  _tree_out->Branch("Q2",&Q2,"data/D");
+  _tree_out->Branch("t",&t,"data/D");
+
+  _tree_out->Branch("m_inv",&minv,"data/D");
+  _tree_out->Branch("m_inv_prest",&minv_prest,"data/D");
+  _tree_out->Branch("m_inv_beam",&minv_beam,"data/D");
+
+  _tree_out->Branch("p_e",&p_e,"data/D");
+  _tree_out->Branch("theta_e",&theta_e,"data/D");
+  _tree_out->Branch("phi_e",&phi_e,"data/D");
+  _tree_out->Branch("eta_e",&eta_e,"data/D");
+
+  _tree_out->Branch("p_p",&p_p,"data/D");
+  _tree_out->Branch("theta_p",&theta_p,"data/D");
+  _tree_out->Branch("eta_p",&eta_p,"data/D");
+  _tree_out->Branch("phi_p",&phi_p,"data/D");
+
+  _tree_out->Branch("p_jpsi",&p_jpsi,"data/D");
+  _tree_out->Branch("theta_jpsi",&theta_jpsi,"data/D");
+  _tree_out->Branch("eta_jpsi",&eta_jpsi,"data/D");
+  _tree_out->Branch("phi_jpsi",&phi_jpsi,"data/D");
+
+  _tree_out->Branch("p_je1",&p_je1,"data/D");
+  _tree_out->Branch("theta_je1",&theta_je1,"data/D");
+  _tree_out->Branch("eta_je1",&eta_je1,"data/D");
+  _tree_out->Branch("phi_je1",&phi_je1,"data/D");
+
+  _tree_out->Branch("p_je2",&p_je2,"data/D");
+  _tree_out->Branch("theta_je2",&theta_je2,"data/D");
+  _tree_out->Branch("eta_je2",&eta_je2,"data/D");
+  _tree_out->Branch("phi_je2",&phi_je2,"data/D");
+
+  _tree_out->Branch("neve",&neve,"data/I");
+
+  _tree_out->Branch("Gamma",&Gamma,"data/D");
+  _tree_out->Branch("epsilon",&epsilon,"data/D");
+  _tree_out->Branch("Keq",&Keq,"data/D");
+  _tree_out->Branch("W",&W,"data/D");
+  _tree_out->Branch("q",&q,"data/D");
+  _tree_out->Branch("theta_q",&theta_q,"data/D");
+  _tree_out->Branch("J",&J,"data/D");
+  _tree_out->Branch("R",&R,"data/D");
+  _tree_out->Branch("theta_cm",&theta_cm,"data/D");
+  _tree_out->Branch("phi_cm",&phi_cm,"data/D");
+  _tree_out->Branch("r",&r,"data/D");
+
+  _tree_out->Branch("dxs",&dxs,"data/D");
+  _tree_out->Branch("dxs_2g",&dxs_2g,"data/D");
+  _tree_out->Branch("dxs_23g",&dxs_23g,"data/D");
+
+  _tree_out->Branch("tmin",&tmin,"data/D");
+  _tree_out->Branch("tmax",&tmax,"data/D");
+
+  _tree_out->Branch("phasespace",&phasespace,"data/D");
+
+  cout << "create_output_file() done" << endl;
+  return 0;
+}
+
+int Simulator::process_event()
+{
+  cout << "process_event() done" << endl;
+  return 0;
+}
+
+int Simulator::end()
+{
+  _file_out->Write();
+  _file_out->Close();
+
+  cout << "end() done" << endl;
+  return 0;
+}
+
+//////////////
 
 Double_t Simulator::fun_2g(Double_t x, Double_t t, Double_t M){
   Double_t N2g = 7.5671e3;
@@ -856,7 +928,7 @@ int main (Int_t argc, char *argv[])
       }
     }
   }
-    
+
   sim.run();
   return 0;
 }
