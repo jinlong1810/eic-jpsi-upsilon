@@ -30,63 +30,10 @@ Simulator::Simulator(){
 
   Gbeam_min = 7.5;
 
-  Gbeam = 0;
-  Gflux = 0;
-
-  Q2 = 0;
-  t = 0;
-
-  minv = 0;
-  minv_prest = 0;
-  minv_beam = 0;
-
-  p_e = 0;
-  theta_e = 0;
-  phi_e = 0;
-  eta_e = 0;
-  p_p = 0;
-  theta_p = 0;
-  phi_p = 0;
-  eta_p = 0;
-  p_jpsi = 0;
-  theta_jpsi = 0;
-  phi_jpsi = 0;
-  eta_jpsi = 0;
-
-  p_je1 = 0;
-  theta_je1 = 0;
-  phi_je1 = 0;
-  eta_je1 = 0;
-  p_je2 = 0;
-  theta_je2 = 0;
-  phi_je2 = 0;
-  eta_je2 = 0;
-
-  weight_decay = 0;
-  weight = 0;
-  
   neve = 0;
-    
-  Gamma = 0;
-  epsilon = 0;
-  Keq = 0;
-  W = 0;
-  q = 0;
-  theta_q = 0;
-  J = 0;
-  R = 0;
-  theta_cm = 0;
-  phi_cm = 0;
-  r = 0;
 
-  dxs = 0;
-  dxs_2g = 0;
-  dxs_23g = 0;
-
-  tmin = 0;
-  tmax = 0;
-
-  phasespace = 0;
+  /* set all event-wise variables to 0 */
+  reset_event_variables();
 
 }
 
@@ -789,6 +736,68 @@ int Simulator::create_output_file()
 
   cout << "create_output_file() done" << endl;
   return 0;
+}
+
+void Simulator::reset_event_variables()
+{
+
+  Gbeam = 0;
+  Gflux = 0;
+
+  Q2 = 0;
+  t = 0;
+
+  minv = 0;
+  minv_prest = 0;
+  minv_beam = 0;
+
+  p_e = 0;
+  theta_e = 0;
+  phi_e = 0;
+  eta_e = 0;
+  p_p = 0;
+  theta_p = 0;
+  phi_p = 0;
+  eta_p = 0;
+  p_jpsi = 0;
+  theta_jpsi = 0;
+  phi_jpsi = 0;
+  eta_jpsi = 0;
+
+  p_je1 = 0;
+  theta_je1 = 0;
+  phi_je1 = 0;
+  eta_je1 = 0;
+  p_je2 = 0;
+  theta_je2 = 0;
+  phi_je2 = 0;
+  eta_je2 = 0;
+
+  weight_decay = 0;
+  weight = 0;
+    
+  Gamma = 0;
+  epsilon = 0;
+  Keq = 0;
+  W = 0;
+  q = 0;
+  theta_q = 0;
+  J = 0;
+  R = 0;
+  theta_cm = 0;
+  phi_cm = 0;
+  r = 0;
+
+  dxs = 0;
+  dxs_2g = 0;
+  dxs_23g = 0;
+
+  tmin = 0;
+  tmax = 0;
+
+  phasespace = 0;
+
+  return;
 }
 
 int Simulator::process_event()

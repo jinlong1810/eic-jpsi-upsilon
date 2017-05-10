@@ -31,6 +31,7 @@ class Simulator {
 
   int init();
   int create_output_file();
+  void reset_event_variables();
   int process_event();
   int end();
 
@@ -57,6 +58,9 @@ class Simulator {
   bool Is_g;
   
   Double_t Gbeam_min;
+
+  /* counter of actual event */
+  Int_t neve;
 
   /* Event-wise parameters */
 
@@ -99,8 +103,6 @@ class Simulator {
   /* Weights */
   Double_t weight_decay;
   Double_t weight;
-  
-  Int_t neve;
     
   /* calculation formular */
   Double_t Gamma;
