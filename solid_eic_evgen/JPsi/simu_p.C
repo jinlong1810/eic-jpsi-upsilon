@@ -49,13 +49,18 @@ int main (Int_t argc, char *argv[])
   gRandom->SetSeed(0);
 
   Int_t nevents=1000000; //number of events
+
   Double_t Ebeam_lab=11.0; // Electron Beam Energy in labortory frame
   Double_t Etarget_lab=0.0; // Proton Beam Energy in labortory frame
+
   TString output_root_file("output.root");
+
   TString meson_type=("jpsi");
   string type;
   string acceptance_root_file="no";
+
   bool Is_e=false,Is_g=false;
+
   if (argc==1){
     cout << "./simu_p -n[nevents as integer like 1000000] -t[e for electroproduction,g for photoproduction] -b[Ebeam in GeV] -o[output_root_file]" << endl;
   }
@@ -111,23 +116,23 @@ int main (Int_t argc, char *argv[])
     pBeam_lab->SetPxPyPzE(0.,0.,Ebeam_lab,sqrt(Ebeam_lab*Ebeam_lab+mass_e*mass_e));
     pTarget_lab->SetPxPyPzE(0.,0.,Etarget_lab,sqrt(Etarget_lab*Etarget_lab+mass_p*mass_p));
 
-    TLorentzVector *pBeam = (TLorentzVector*)pBeam_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *pTarget = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *pBeam_prest = (TLorentzVector*)pBeam_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *pTarget_prest = (TLorentzVector*)pTarget_lab->Clone(); //new TLorentzVector(0.,0.,0.,0.);
 
     /* determine beta to move to 'proton at rest' reference frame */
     TVector3 beta_lab_protonrest = pTarget_lab->Vect();
     beta_lab_protonrest *= -1./pTarget_lab->E();
-    pBeam->Boost(beta_lab_protonrest);
-    pTarget->Boost(beta_lab_protonrest);
+    pBeam_prest->Boost(beta_lab_protonrest);
+    pTarget_prest->Boost(beta_lab_protonrest);
 
-    Double_t Ebeam = pBeam->E();
-    /* pTarget->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0 */
+    Double_t Ebeam = pBeam_prest->E();
+    /* pTarget_prest->Vect().Mag() may give very small but non-0 number (rounding etc.), so force Etarget to 0 */
     Double_t Etarget = 0;
-    pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
+    pTarget_prest->SetPxPyPzE(0.,0.,0.,mass_p);
 
     /* Monitoring output statements */
     cout << "Energies in LABORATORY  FRAME: " << pBeam_lab->E() << " GeV (e) -> " << pTarget_lab->E() << " GeV (p) " << endl;
-    cout << "Energies in TARGET REST FRAME: " << pBeam->E() << " GeV (e) -> " << pTarget->E() << " GeV (p) " << endl;
+    cout << "Energies in TARGET REST FRAME: " << pBeam_prest->E() << " GeV (e) -> " << pTarget_prest->E() << " GeV (p) " << endl;
 
     cout << "********************" << endl;
 
@@ -138,13 +143,13 @@ int main (Int_t argc, char *argv[])
 	 << pBeam_lab->E() << ")" << endl;
 
     cout << "Proton Rest frame electron 4-vector: ("
-	 << pBeam->Px() << ", "
-	 << pBeam->Py() << ", "
-	 << pBeam->Pz() << ", "
-	 << pBeam->E() << ")" << endl;
+	 << pBeam_prest->Px() << ", "
+	 << pBeam_prest->Py() << ", "
+	 << pBeam_prest->Pz() << ", "
+	 << pBeam_prest->E() << ")" << endl;
  
     TLorentzVector *pBeam_lab_xcheck = new TLorentzVector(0.,0.,0.,0.);
-    *pBeam_lab_xcheck = *pBeam;
+    *pBeam_lab_xcheck = *pBeam_prest;
     pBeam_lab_xcheck->Boost(-beta_lab_protonrest);
 
     cout << "Lab frame electron 4-vector after boosts: ("
@@ -162,13 +167,13 @@ int main (Int_t argc, char *argv[])
 	 << pTarget_lab->E() << ")" << endl;
 
     cout << "Proton Rest frame proton 4-vector: ("
-	 << pTarget->Px() << ", "
-	 << pTarget->Py() << ", "
-	 << pTarget->Pz() << ", "
-	 << pTarget->E() << ")" << endl;
+	 << pTarget_prest->Px() << ", "
+	 << pTarget_prest->Py() << ", "
+	 << pTarget_prest->Pz() << ", "
+	 << pTarget_prest->E() << ")" << endl;
  
     TLorentzVector *pTarget_lab_xcheck = new TLorentzVector(0.,0.,0.,0.);
-    *pTarget_lab_xcheck = *pTarget;
+    *pTarget_lab_xcheck = *pTarget_prest;
     pTarget_lab_xcheck->Boost(-beta_lab_protonrest);
 
     cout << "Lab frame proton 4-vector after boosts: ("
@@ -211,12 +216,12 @@ int main (Int_t argc, char *argv[])
     TLorentzVector *ps2 = new TLorentzVector(0.,0.,0.,0.);
 
     /* 4-vectors in "proton at rest" frame */
-    TLorentzVector *p4_ep = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_recoil = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_jpsi = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_ep_prest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_recoil_prest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_jpsi_prest = new TLorentzVector(0.,0.,0.,0.);
 
-    TLorentzVector *p4_je1 = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *p4_je2 = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_je1_prest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *p4_je2_prest = new TLorentzVector(0.,0.,0.,0.);
 
     /* 4-vectors in "laboratory" frame */
     TLorentzVector *p4_ep_lab = new TLorentzVector(0.,0.,0.,0.);
@@ -359,14 +364,14 @@ int main (Int_t argc, char *argv[])
 	eta_e = -1*log( tan( theta_e / 2.0 ) );
         phi_e = gRandom->Uniform(0.,2.*3.1415926);
 
-        p4_ep->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
+        p4_ep_prest->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
 
-        *ps = *pBeam + *pTarget;
+        *ps = *pBeam_prest + *pTarget_prest;
 
-        *pq = *pBeam - *p4_ep;
+        *pq = *pBeam_prest - *p4_ep_prest;
 
         Q2 = -pq->M2();
-        *ps1 = *ps - *p4_ep;
+        *ps1 = *ps - *p4_ep_prest;
 
         // ps1->SetPxPyPzE(0,0,11,sqrt(11*11+mass_p*mass_p)+mass_meson);
 
@@ -407,35 +412,35 @@ int main (Int_t argc, char *argv[])
               for (Int_t j=0;j!=2;j++){
                 p_p = sol[j];
                 if (p_p>0){
-                  p4_recoil->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
-                  *p4_jpsi = *ps1-*p4_recoil;
+                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
+                  *p4_jpsi_prest = *ps1-*p4_recoil_prest;
 
-                  if (p4_jpsi->M()>0.){
-                    gen1->SetDecay(*p4_jpsi,2,&mass[0]);
+                  if (p4_jpsi_prest->M()>0.){
+                    gen1->SetDecay(*p4_jpsi_prest,2,&mass[0]);
                     weight_decay = gen1->Generate();  //decay by phasespace, return weight as 1, replace it later with actual distribution
-                    p4_je1 = gen1->GetDecay(0);
-                    p4_je2 = gen1->GetDecay(1);
+                    p4_je1_prest = gen1->GetDecay(0);
+                    p4_je2_prest = gen1->GetDecay(1);
 
-                    theta_e = p4_ep->Theta()*DEG;
-		    eta_e = p4_ep->PseudoRapidity();
-                    phi_e = p4_ep->Phi()*DEG;
+                    theta_e = p4_ep_prest->Theta()*DEG;
+		    eta_e = p4_ep_prest->PseudoRapidity();
+                    phi_e = p4_ep_prest->Phi()*DEG;
 
-                    theta_p = p4_recoil->Theta()*DEG;
-                    phi_p = p4_recoil->Phi()*DEG;
+                    theta_p = p4_recoil_prest->Theta()*DEG;
+                    phi_p = p4_recoil_prest->Phi()*DEG;
 
-                    p_jpsi = p4_jpsi->P();
-                    theta_jpsi = p4_jpsi->Theta()*DEG;
-                    phi_jpsi = p4_jpsi->Phi()*DEG;
+                    p_jpsi = p4_jpsi_prest->P();
+                    theta_jpsi = p4_jpsi_prest->Theta()*DEG;
+                    phi_jpsi = p4_jpsi_prest->Phi()*DEG;
 
-                    p_je1 = p4_je1->P();
-                    theta_je1 = p4_je1->Theta()*DEG;
-                    phi_je1 = p4_je1->Phi()*DEG;
+                    p_je1 = p4_je1_prest->P();
+                    theta_je1 = p4_je1_prest->Theta()*DEG;
+                    phi_je1 = p4_je1_prest->Phi()*DEG;
 
-                    p_je2 = p4_je2->P();
-                    theta_je2 = p4_je2->Theta()*DEG;
-                    phi_je2 = p4_je2->Phi()*DEG;
+                    p_je2 = p4_je2_prest->P();
+                    theta_je2 = p4_je2_prest->Theta()*DEG;
+                    phi_je2 = p4_je2_prest->Phi()*DEG;
 
-                    *pt = *p4_recoil - *pTarget;
+                    *pt = *p4_recoil_prest - *pTarget_prest;
                     t = -pt->M2();
 
                     R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
@@ -448,7 +453,7 @@ int main (Int_t argc, char *argv[])
                     Gamma = alpha/2./3.1415926/3.1415926*p_e/Ebeam*Keq/Q2/(1.-epsilon);
                     r= epsilon*R/(1.+epsilon*R);
 
-                    // J = fabs((pq->E()+mass_p-q*p4_recoil->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
+                    // J = fabs((pq->E()+mass_p-q*p4_recoil_prest->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
                     //     /(2.*mass_p*q*p_p*(cos(theta_q/DEG)*tan(theta_p/DEG)-sin(theta_q/DEG)*sin((phi_p-phi_e+180.)/DEG))));
                     // cout << aa - bb*sqrt(p_p*p_p+mass_p*mass_p)-cc*p_p << endl;
 
@@ -457,12 +462,12 @@ int main (Int_t argc, char *argv[])
                     J = 2 * mass_p * dEpdcp;
 
                     //go to JPsi at rest frame
-                    TVector3 beta = p4_jpsi->Vect();
-                    beta *= -1./p4_jpsi->E();
-		    *p4_je1_jpsirest = *p4_je1;
+                    TVector3 beta = p4_jpsi_prest->Vect();
+                    beta *= -1./p4_jpsi_prest->E();
+		    *p4_je1_jpsirest = *p4_je1_prest;
                     p4_je1_jpsirest->Boost(beta);
                     //get recoil proton in the same frame
-                    *p4_recoil_jpsirest = *p4_recoil;
+                    *p4_recoil_jpsirest = *p4_recoil_prest;
                     p4_recoil_jpsirest->Boost(beta);
 
                     *p4_q_jpsirest = *pq;
@@ -490,7 +495,7 @@ int main (Int_t argc, char *argv[])
                     //theta_cm and phi_cm as two degree of freedom, their phasespace size is 4pi, integral over them will give 1 with r cancls out
 
                     // calculate tmin
-                    *ps2 = *pq + *pTarget;
+                    *ps2 = *pq + *pTarget_prest;
                     tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
                     tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
 
@@ -508,15 +513,15 @@ int main (Int_t argc, char *argv[])
 
 		    /* Calculate invariant mass in 'proton at rest' frame */
 		    TLorentzVector p4_sum_prest(0.,0.,0.,0.);
-		    p4_sum_prest += ( *p4_ep + *p4_recoil + *p4_je1 + *p4_je2 );
+		    p4_sum_prest += ( *p4_ep_prest + *p4_recoil_prest + *p4_je1_prest + *p4_je2_prest );
 		    minv_prest = p4_sum_prest.M();
 
 		    /* Create vectors in laboratory frame */
-		    *p4_ep_lab = *p4_ep;
-		    *p4_recoil_lab = *p4_recoil;
-		    *p4_jpsi_lab = *p4_jpsi;
-		    *p4_je1_lab = *p4_je1;
-		    *p4_je2_lab = *p4_je2;
+		    *p4_ep_lab = *p4_ep_prest;
+		    *p4_recoil_lab = *p4_recoil_prest;
+		    *p4_jpsi_lab = *p4_jpsi_prest;
+		    *p4_je1_lab = *p4_je1_prest;
+		    *p4_je2_lab = *p4_je2_prest;
 
 		    /* Boost final state particles to laboratory frame */
 		    p4_ep_lab->Boost(-1*beta_lab_protonrest);
@@ -591,12 +596,12 @@ int main (Int_t argc, char *argv[])
         Gflux = fbr->Eval(Gbeam);
         //       cout << Gbeam << " " << Gflux << endl;
 
-        pBeam->SetPxPyPzE(0.,0.,Gbeam,Gbeam);
-        pTarget->SetPxPyPzE(0.,0.,0.,mass_p);
+        pBeam_prest->SetPxPyPzE(0.,0.,Gbeam,Gbeam);
+        pTarget_prest->SetPxPyPzE(0.,0.,0.,mass_p);
 
-        *ps = *pBeam + *pTarget;
+        *ps = *pBeam_prest + *pTarget_prest;
 
-        *pq = *pBeam;
+        *pq = *pBeam_prest;
 
         Q2 = -pq->M2();
         *ps1 = *ps;
@@ -638,34 +643,34 @@ int main (Int_t argc, char *argv[])
               for (Int_t j=0;j!=2;j++){
                 p_p = sol[j];
                 if (p_p>0){
-                  p4_recoil->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
-                  *p4_jpsi = *ps1-*p4_recoil;
+                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
+                  *p4_jpsi_prest = *ps1-*p4_recoil_prest;
 
-                  if (p4_jpsi->M()>0.){
-                    gen1->SetDecay(*p4_jpsi,2,&mass[0]);
+                  if (p4_jpsi_prest->M()>0.){
+                    gen1->SetDecay(*p4_jpsi_prest,2,&mass[0]);
                     weight_decay = gen1->Generate();   //decay by phasespace, return weight as 1, replace it later with actual distribution
-                    p4_je1 = gen1->GetDecay(0);
-                    p4_je2 = gen1->GetDecay(1);
+                    p4_je1_prest = gen1->GetDecay(0);
+                    p4_je2_prest = gen1->GetDecay(1);
 
-                    theta_e = p4_ep->Theta()*DEG;
-                    phi_e = p4_ep->Phi()*DEG;
+                    theta_e = p4_ep_prest->Theta()*DEG;
+                    phi_e = p4_ep_prest->Phi()*DEG;
 
-                    theta_p = p4_recoil->Theta()*DEG;
-                    phi_p = p4_recoil->Phi()*DEG;
+                    theta_p = p4_recoil_prest->Theta()*DEG;
+                    phi_p = p4_recoil_prest->Phi()*DEG;
 
-                    p_jpsi = p4_jpsi->P();
-                    theta_jpsi = p4_jpsi->Theta()*DEG;
-                    phi_jpsi = p4_jpsi->Phi()*DEG;
+                    p_jpsi = p4_jpsi_prest->P();
+                    theta_jpsi = p4_jpsi_prest->Theta()*DEG;
+                    phi_jpsi = p4_jpsi_prest->Phi()*DEG;
 
-                    p_je1 = p4_je1->P();
-                    theta_je1 = p4_je1->Theta()*DEG;
-                    phi_je1 = p4_je1->Phi()*DEG;
+                    p_je1 = p4_je1_prest->P();
+                    theta_je1 = p4_je1_prest->Theta()*DEG;
+                    phi_je1 = p4_je1_prest->Phi()*DEG;
 
-                    p_je2 = p4_je2->P();
-                    theta_je2 = p4_je2->Theta()*DEG;
-                    phi_je2 = p4_je2->Phi()*DEG;
+                    p_je2 = p4_je2_prest->P();
+                    theta_je2 = p4_je2_prest->Theta()*DEG;
+                    phi_je2 = p4_je2_prest->Phi()*DEG;
 
-                    *pt = *p4_recoil - *pTarget;
+                    *pt = *p4_recoil_prest - *pTarget_prest;
                     t = -pt->M2();
 
                     R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
@@ -686,12 +691,12 @@ int main (Int_t argc, char *argv[])
                     J = 2 * mass_p * dEpdcp;
 
                     //go to JPsi at rest frame
-                    TVector3 beta = p4_jpsi->Vect();
-                    beta *= -1./p4_jpsi->E();
-		    *p4_je1_jpsirest = *p4_je1;
+                    TVector3 beta = p4_jpsi_prest->Vect();
+                    beta *= -1./p4_jpsi_prest->E();
+		    *p4_je1_jpsirest = *p4_je1_prest;
                     p4_je1_jpsirest->Boost(beta);
                     //get recoil proton in the same frame
-                    *p4_recoil_jpsirest = *p4_recoil;
+                    *p4_recoil_jpsirest = *p4_recoil_prest;
                     p4_recoil_jpsirest->Boost(beta);
 
                     *p4_q_jpsirest = *pq;
@@ -720,7 +725,7 @@ int main (Int_t argc, char *argv[])
                     //theta_cm and phi_cm as two degree of freedom, their phasespace size is 4pi, integral over them will give 1 with r cancls out
 
                     // calculate tmin
-                    *ps2 = *pq + *pTarget;
+                    *ps2 = *pq + *pTarget_prest;
                     tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
                     tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
 
