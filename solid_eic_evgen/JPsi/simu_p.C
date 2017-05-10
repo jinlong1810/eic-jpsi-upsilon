@@ -209,17 +209,17 @@ int main (Int_t argc, char *argv[])
     else if ( meson_type == "upsilon" )
       mass_meson = mass_upsilon;
 
-    TLorentzVector *ps = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *pq = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *pt = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *ps1 = new TLorentzVector(0.,0.,0.,0.);
-    TLorentzVector *ps2 = new TLorentzVector(0.,0.,0.,0.);
+    /* kinematics 4-vectors in "proton at rest" frame */
+    TLorentzVector *ps_prest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *pq_prest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *pt_prest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *ps1_prest = new TLorentzVector(0.,0.,0.,0.);
+    TLorentzVector *ps2_prest = new TLorentzVector(0.,0.,0.,0.);
 
     /* 4-vectors in "proton at rest" frame */
     TLorentzVector *p4_ep_prest = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_recoil_prest = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_jpsi_prest = new TLorentzVector(0.,0.,0.,0.);
-
     TLorentzVector *p4_je1_prest = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_je2_prest = new TLorentzVector(0.,0.,0.,0.);
 
@@ -227,7 +227,6 @@ int main (Int_t argc, char *argv[])
     TLorentzVector *p4_ep_lab = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_recoil_lab = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_jpsi_lab = new TLorentzVector(0.,0.,0.,0.);
-
     TLorentzVector *p4_je1_lab = new TLorentzVector(0.,0.,0.,0.);
     TLorentzVector *p4_je2_lab = new TLorentzVector(0.,0.,0.,0.);
 
@@ -366,17 +365,17 @@ int main (Int_t argc, char *argv[])
 
         p4_ep_prest->SetPxPyPzE(p_e*sin(theta_e)*cos(phi_e),p_e*sin(theta_e)*sin(phi_e),p_e*cos(theta_e),sqrt(p_e*p_e+mass_e*mass_e));
 
-        *ps = *pBeam_prest + *pTarget_prest;
+        *ps_prest = *pBeam_prest + *pTarget_prest;
 
-        *pq = *pBeam_prest - *p4_ep_prest;
+        *pq_prest = *pBeam_prest - *p4_ep_prest;
 
-        Q2 = -pq->M2();
-        *ps1 = *ps - *p4_ep_prest;
+        Q2 = -pq_prest->M2();
+        *ps1_prest = *ps_prest - *p4_ep_prest;
 
-        // ps1->SetPxPyPzE(0,0,11,sqrt(11*11+mass_p*mass_p)+mass_meson);
+        // ps1_prest->SetPxPyPzE(0,0,11,sqrt(11*11+mass_p*mass_p)+mass_meson);
 
         //judge whether the event pass the kinematics
-        if (ps1->M2() > pow(mass_meson+mass_p,2)){
+        if (ps1_prest->M2() > pow(mass_meson+mass_p,2)){
 
           //sample proton solid angle;
           //    theta_p = acos(gRandom->Uniform(0.85,cos(8./DEG)));
@@ -386,9 +385,9 @@ int main (Int_t argc, char *argv[])
 
           //solve recoil proton mom
           TVector3 p3_p(sin(theta_p)*cos(phi_p),sin(theta_p)*sin(phi_p),cos(theta_p));
-          Double_t aa = (ps1->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
-          Double_t bb = ps1->E();
-          TVector3 p3_s(ps1->Px(),ps1->Py(),ps1->Pz());
+          Double_t aa = (ps1_prest->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
+          Double_t bb = ps1_prest->E();
+          TVector3 p3_s(ps1_prest->Px(),ps1_prest->Py(),ps1_prest->Pz());
           Double_t cc = -p3_p.Dot(p3_s);
           Double_t sol[2];
 
@@ -406,14 +405,14 @@ int main (Int_t argc, char *argv[])
                 weight = 0.5;
               }
 
-              Double_t theta_ps = theta_p;
-              Double_t phi_ps = phi_p;
+              Double_t theta_ps_prest = theta_p;
+              Double_t phi_ps_prest = phi_p;
 
               for (Int_t j=0;j!=2;j++){
                 p_p = sol[j];
                 if (p_p>0){
-                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
-                  *p4_jpsi_prest = *ps1-*p4_recoil_prest;
+                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps_prest)*cos(phi_ps_prest),p_p*sin(theta_ps_prest)*sin(phi_ps_prest),p_p*cos(theta_ps_prest),sqrt(p_p*p_p+mass_p*mass_p));
+                  *p4_jpsi_prest = *ps1_prest-*p4_recoil_prest;
 
                   if (p4_jpsi_prest->M()>0.){
                     gen1->SetDecay(*p4_jpsi_prest,2,&mass[0]);
@@ -440,24 +439,24 @@ int main (Int_t argc, char *argv[])
                     theta_je2 = p4_je2_prest->Theta()*DEG;
                     phi_je2 = p4_je2_prest->Phi()*DEG;
 
-                    *pt = *p4_recoil_prest - *pTarget_prest;
-                    t = -pt->M2();
+                    *pt_prest = *p4_recoil_prest - *pTarget_prest;
+                    t = -pt_prest->M2();
 
                     R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
                     //R defination and parameter a and n are from eq 18 of "R. Fiore et al. Exclusive Jpsi electroproduction in a dual model. Phys. Rev.,D80:116001, 2009"
-                    theta_q = pq->Theta()*DEG;
-                    q = pq->P();
-                    W = sqrt(pow(mass_p + pq->E(),2)-pow(pq->P(),2));
+                    theta_q = pq_prest->Theta()*DEG;
+                    q = pq_prest->P();
+                    W = sqrt(pow(mass_p + pq_prest->E(),2)-pow(pq_prest->P(),2));
                     Keq = (W*W-mass_p*mass_p)/2./mass_p;
                     epsilon = 1./(1+2*q*q/Q2*pow(tan(theta_e/DEG/2.),2));
                     Gamma = alpha/2./3.1415926/3.1415926*p_e/Ebeam*Keq/Q2/(1.-epsilon);
                     r= epsilon*R/(1.+epsilon*R);
 
-                    // J = fabs((pq->E()+mass_p-q*p4_recoil_prest->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
+                    // J = fabs((pq_prest->E()+mass_p-q*p4_recoil_prest->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
                     //     /(2.*mass_p*q*p_p*(cos(theta_q/DEG)*tan(theta_p/DEG)-sin(theta_q/DEG)*sin((phi_p-phi_e+180.)/DEG))));
                     // cout << aa - bb*sqrt(p_p*p_p+mass_p*mass_p)-cc*p_p << endl;
 
-                    Double_t dEpdcp=fabs((ps1->Pz()-(ps1->Px()*cos(phi_p/DEG)+ps1->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
+                    Double_t dEpdcp=fabs((ps1_prest->Pz()-(ps1_prest->Px()*cos(phi_p/DEG)+ps1_prest->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
 
                     J = 2 * mass_p * dEpdcp;
 
@@ -470,7 +469,7 @@ int main (Int_t argc, char *argv[])
                     *p4_recoil_jpsirest = *p4_recoil_prest;
                     p4_recoil_jpsirest->Boost(beta);
 
-                    *p4_q_jpsirest = *pq;
+                    *p4_q_jpsirest = *pq_prest;
                     p4_q_jpsirest->Boost(beta);
                     // calculate the theta angle between these two
                     TVector3 a1 = p4_je1_jpsirest->Vect();
@@ -495,9 +494,9 @@ int main (Int_t argc, char *argv[])
                     //theta_cm and phi_cm as two degree of freedom, their phasespace size is 4pi, integral over them will give 1 with r cancls out
 
                     // calculate tmin
-                    *ps2 = *pq + *pTarget_prest;
-                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
-                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
+                    *ps2_prest = *pq_prest + *pTarget_prest;
+                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
+                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
 
 
                     //differential crossection in nb/(phasespace cell)		      
@@ -599,15 +598,15 @@ int main (Int_t argc, char *argv[])
         pBeam_prest->SetPxPyPzE(0.,0.,Gbeam,Gbeam);
         pTarget_prest->SetPxPyPzE(0.,0.,0.,mass_p);
 
-        *ps = *pBeam_prest + *pTarget_prest;
+        *ps_prest = *pBeam_prest + *pTarget_prest;
 
-        *pq = *pBeam_prest;
+        *pq_prest = *pBeam_prest;
 
-        Q2 = -pq->M2();
-        *ps1 = *ps;
+        Q2 = -pq_prest->M2();
+        *ps1_prest = *ps_prest;
 
         //judge whether the event pass the kinematics
-        if (ps1->M2() > pow(mass_meson+mass_p,2)){
+        if (ps1_prest->M2() > pow(mass_meson+mass_p,2)){
           //sample proton solid angle;
           //    theta_p = acos(gRandom->Uniform(0.85,cos(8./DEG)));
           theta_p = acos(gRandom->Uniform(-1,1)); //random selection in solid angle need to go with cos(theta)
@@ -615,9 +614,9 @@ int main (Int_t argc, char *argv[])
 
           //solve recoil proton mom
           TVector3 p3_p(sin(theta_p)*cos(phi_p),sin(theta_p)*sin(phi_p),cos(theta_p));
-          Double_t aa = (ps1->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
-          Double_t bb = ps1->E();
-          TVector3 p3_s(ps1->Px(),ps1->Py(),ps1->Pz());
+          Double_t aa = (ps1_prest->M2()+mass_p*mass_p-mass_meson*mass_meson)/2.;
+          Double_t bb = ps1_prest->E();
+          TVector3 p3_s(ps1_prest->Px(),ps1_prest->Py(),ps1_prest->Pz());
           Double_t cc = -p3_p.Dot(p3_s);
           Double_t sol[2];
 
@@ -637,14 +636,14 @@ int main (Int_t argc, char *argv[])
 
               //                    cout << sol[0] << " " << sol[1] << endl;
 
-              Double_t theta_ps = theta_p;
-              Double_t phi_ps = phi_p;
+              Double_t theta_ps_prest = theta_p;
+              Double_t phi_ps_prest = phi_p;
 
               for (Int_t j=0;j!=2;j++){
                 p_p = sol[j];
                 if (p_p>0){
-                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps)*cos(phi_ps),p_p*sin(theta_ps)*sin(phi_ps),p_p*cos(theta_ps),sqrt(p_p*p_p+mass_p*mass_p));
-                  *p4_jpsi_prest = *ps1-*p4_recoil_prest;
+                  p4_recoil_prest->SetPxPyPzE(p_p*sin(theta_ps_prest)*cos(phi_ps_prest),p_p*sin(theta_ps_prest)*sin(phi_ps_prest),p_p*cos(theta_ps_prest),sqrt(p_p*p_p+mass_p*mass_p));
+                  *p4_jpsi_prest = *ps1_prest-*p4_recoil_prest;
 
                   if (p4_jpsi_prest->M()>0.){
                     gen1->SetDecay(*p4_jpsi_prest,2,&mass[0]);
@@ -670,23 +669,23 @@ int main (Int_t argc, char *argv[])
                     theta_je2 = p4_je2_prest->Theta()*DEG;
                     phi_je2 = p4_je2_prest->Phi()*DEG;
 
-                    *pt = *p4_recoil_prest - *pTarget_prest;
-                    t = -pt->M2();
+                    *pt_prest = *p4_recoil_prest - *pTarget_prest;
+                    t = -pt_prest->M2();
 
                     R = pow((a*mass_meson*mass_meson+Q2)/(a*mass_meson*mass_meson),n) -1;
-                    theta_q = pq->Theta()*DEG;
-                    q = pq->P();
-                    W = sqrt(pow(mass_p + pq->E(),2)-pow(pq->P(),2));
+                    theta_q = pq_prest->Theta()*DEG;
+                    q = pq_prest->P();
+                    W = sqrt(pow(mass_p + pq_prest->E(),2)-pow(pq_prest->P(),2));
                     Keq = (W*W-mass_p*mass_p)/2./mass_p;
                     //            epsilon = 1./(1+2*q*q/Q2*pow(tan(theta_e/DEG/2.),2));
                     //            Gamma = alpha/2./3.1415926/3.1415926*p_e/Ebeam*Keq/Q2/(1.-epsilon);
                     //            r= epsilon*R/(1.+epsilon*R);
 
-                    // J = fabs((pq->E()+mass_p-q*p4_recoil->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
+                    // J = fabs((pq_prest->E()+mass_p-q*p4_recoil->E()/p_p*(cos(theta_q/DEG)*cos(theta_p/DEG)+sin(theta_q/DEG)*sin(theta_p/DEG)*sin((phi_p-phi_e+180.)/DEG))*tan(theta_q/DEG))
                     //     /(2.*mass_p*q*p_p*(cos(theta_q/DEG)*tan(theta_p/DEG)-sin(theta_q/DEG)*sin((phi_p-phi_e+180.)/DEG))));
                     // cout << aa - bb*sqrt(p_p*p_p+mass_p*mass_p)-cc*p_p << endl;
 
-                    Double_t dEpdcp=fabs((ps1->Pz()-(ps1->Px()*cos(phi_p/DEG)+ps1->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
+                    Double_t dEpdcp=fabs((ps1_prest->Pz()-(ps1_prest->Px()*cos(phi_p/DEG)+ps1_prest->Py()*sin(phi_p/DEG))*cos(theta_p/DEG)/sin(theta_p/DEG))*p_p/(bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p));
                     //cout << J << " " << 1./mass_p/2./dEpdcp<< " " << dEpdcp << " " << p_p << " " << bb+cc*sqrt(p_p*p_p+mass_p*mass_p)/p_p << endl;
                     J = 2 * mass_p * dEpdcp;
 
@@ -699,7 +698,7 @@ int main (Int_t argc, char *argv[])
                     *p4_recoil_jpsirest = *p4_recoil_prest;
                     p4_recoil_jpsirest->Boost(beta);
 
-                    *p4_q_jpsirest = *pq;
+                    *p4_q_jpsirest = *pq_prest;
                     p4_q_jpsirest->Boost(beta);
                     // calculate the theta angle between these two
                     TVector3 a1 = p4_je1_jpsirest->Vect();
@@ -725,9 +724,9 @@ int main (Int_t argc, char *argv[])
                     //theta_cm and phi_cm as two degree of freedom, their phasespace size is 4pi, integral over them will give 1 with r cancls out
 
                     // calculate tmin
-                    *ps2 = *pq + *pTarget_prest;
-                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
-                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2->M2());
+                    *ps2_prest = *pq_prest + *pTarget_prest;
+                    tmin = -1*t0lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
+                    tmax = -1*t1lim(-sqrt(Q2),mass_p, mass_meson, mass_p, ps2_prest->M2());
 
 
                     //differential crossection in nb/(phasespace cell)
