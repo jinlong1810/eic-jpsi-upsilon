@@ -1,32 +1,14 @@
 #include "simu_p.h"
 #include "globals.h"
 
-#include <TApplication.h>
 #include <TTree.h>
 #include <TFile.h>
-#include <TH1F.h>
-#include <TH2F.h>
 #include <TString.h>
-#include <TChain.h>
-#include <TEventList.h>
-#include <TCanvas.h>
-#include <TGraph.h>
 #include <TF1.h>
-#include <TCut.h>
 #include <TLorentzVector.h>
-
 #include <TGenPhaseSpace.h>
 #include <TRandom.h>
-#include <TVector.h>
 #include <TVector3.h>
-
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <cmath>
-#include <vector>
-#include <string>
 
 using namespace std;
 
