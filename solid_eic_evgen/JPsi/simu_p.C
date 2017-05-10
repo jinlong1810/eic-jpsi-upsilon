@@ -232,18 +232,21 @@ int main (Int_t argc, char *argv[])
     TLorentzVector *p4_q_jpsirest = new TLorentzVector(0.,0.,0.,0.);
 
 
+    /* Outut file */
     TFile *file = new TFile(output_root_file,"RECREATE");
     TTree *T = new TTree("T","T");
     T->SetDirectory(file);
 
+    /* Photon energy and flux */
     Double_t Gbeam=0,Gflux=0;
-    T->Branch("Ebeam",&Ebeam,"data/D");
-    T->Branch("Gbeam",&Gbeam,"data/D");
-    T->Branch("Gflux",&Gflux,"data/D");
-    T->Branch("Etarget",&Etarget,"data/D");
 
+    /* global event paraemters */
     Double_t Q2,t;
 
+    /* invariant mass */
+    Double_t minv, minv_prest, minv_beam;
+
+    /* final state particle properties in laboratory frame */
     Double_t p_e,theta_e,phi_e,eta_e;
     Double_t p_p,theta_p,phi_p,eta_p;
     Double_t p_jpsi, theta_jpsi,phi_jpsi,eta_jpsi;
@@ -251,13 +254,25 @@ int main (Int_t argc, char *argv[])
     Double_t p_je1, theta_je1, phi_je1, eta_je1;
     Double_t p_je2, theta_je2, phi_je2, eta_je2;
 
+    /* Weights */
     Double_t weight_decay;
-    T->Branch("weight_decay",&weight_decay,"data/D");
     Double_t weight;
+
+    /* Set branches */
+    T->Branch("Ebeam",&Ebeam,"data/D");
+    T->Branch("Gbeam",&Gbeam,"data/D");
+    T->Branch("Gflux",&Gflux,"data/D");
+    T->Branch("Etarget",&Etarget,"data/D");
+
+    T->Branch("weight_decay",&weight_decay,"data/D");
     T->Branch("weight",&weight,"data/D");
 
     T->Branch("Q2",&Q2,"data/D");
     T->Branch("t",&t,"data/D");
+
+    T->Branch("m_inv",&minv,"data/D");
+    T->Branch("m_inv_prest",&minv_prest,"data/D");
+    T->Branch("m_inv_beam",&minv_beam,"data/D");
 
     T->Branch("p_e",&p_e,"data/D");
     T->Branch("theta_e",&theta_e,"data/D");
@@ -486,6 +501,16 @@ int main (Int_t argc, char *argv[])
                     dxs_23g = J/2./3.1415926*Gamma*fun_23g(W,t,mass_meson);
 
 
+		    /* Calculate invariant mass from beam */
+		    TLorentzVector p4_sum_beam(0.,0.,0.,0.);
+		    p4_sum_beam += ( *pBeam_lab + *pTarget_lab );
+		    minv_beam = p4_sum_beam.M();
+
+		    /* Calculate invariant mass in 'proton at rest' frame */
+		    TLorentzVector p4_sum_prest(0.,0.,0.,0.);
+		    p4_sum_prest += ( *p4_ep + *p4_recoil + *p4_je1 + *p4_je2 );
+		    minv_prest = p4_sum_prest.M();
+
 		    /* Create vectors in laboratory frame */
 		    *p4_ep_lab = *p4_ep;
 		    *p4_recoil_lab = *p4_recoil;
@@ -499,6 +524,11 @@ int main (Int_t argc, char *argv[])
 		    p4_jpsi_lab->Boost(-1*beta_lab_protonrest);
 		    p4_je1_lab->Boost(-1*beta_lab_protonrest);
 		    p4_je2_lab->Boost(-1*beta_lab_protonrest);
+
+		    /* Calculate invariant mass in laboratory frame */
+		    TLorentzVector p4_sum(0.,0.,0.,0.);
+		    p4_sum += ( *p4_ep_lab + *p4_recoil_lab + *p4_je1_lab + *p4_je2_lab );
+		    minv = p4_sum.M();
 
 		    /* re-calculate final state particle parameters */
 		    p_e = p4_ep_lab->P();
