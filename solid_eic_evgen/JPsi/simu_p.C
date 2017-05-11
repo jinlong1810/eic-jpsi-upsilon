@@ -420,26 +420,31 @@ int Simulator::run ()
 
 		    /* re-calculate final state particle parameters */
 		    p_e = p4_ep_lab->P();
+		    pt_e = p4_ep_lab->Perp();
                     theta_e = p4_ep_lab->Theta()*simglobals::DEG;
                     eta_e = p4_ep_lab->PseudoRapidity();
                     phi_e = p4_ep_lab->Phi()*simglobals::DEG;
 
 		    p_p = p4_recoil_lab->P();
+		    pt_p = p4_recoil_lab->Perp();
                     theta_p = p4_recoil_lab->Theta()*simglobals::DEG;
                     eta_p = p4_recoil_lab->PseudoRapidity();
                     phi_p = p4_recoil_lab->Phi()*simglobals::DEG;
 
                     p_jpsi = p4_jpsi_lab->P();
+                    pt_jpsi = p4_jpsi_lab->Perp();
                     theta_jpsi = p4_jpsi_lab->Theta()*simglobals::DEG;
                     eta_jpsi = p4_jpsi_lab->PseudoRapidity();
                     phi_jpsi = p4_jpsi_lab->Phi()*simglobals::DEG;
 
                     p_je1 = p4_je1_lab->P();
+                    pt_je1 = p4_je1_lab->Perp();
                     theta_je1 = p4_je1_lab->Theta()*simglobals::DEG;
                     eta_je1 = p4_je1_lab->PseudoRapidity();
                     phi_je1 = p4_je1_lab->Phi()*simglobals::DEG;
 
                     p_je2 = p4_je2_lab->P();
+                    pt_je2 = p4_je2_lab->Perp();
                     theta_je2 = p4_je2_lab->Theta()*simglobals::DEG;
                     eta_je2 = p4_je2_lab->PseudoRapidity();
                     phi_je2 = p4_je2_lab->Phi()*simglobals::DEG;
@@ -687,26 +692,31 @@ int Simulator::create_output_file()
   _tree_out->Branch("m_inv_beam",&minv_beam,"data/D");
 
   _tree_out->Branch("p_e",&p_e,"data/D");
+  _tree_out->Branch("pt_e",&pt_e,"data/D");
   _tree_out->Branch("theta_e",&theta_e,"data/D");
   _tree_out->Branch("phi_e",&phi_e,"data/D");
   _tree_out->Branch("eta_e",&eta_e,"data/D");
 
   _tree_out->Branch("p_p",&p_p,"data/D");
+  _tree_out->Branch("pt_p",&pt_p,"data/D");
   _tree_out->Branch("theta_p",&theta_p,"data/D");
   _tree_out->Branch("eta_p",&eta_p,"data/D");
   _tree_out->Branch("phi_p",&phi_p,"data/D");
 
   _tree_out->Branch("p_jpsi",&p_jpsi,"data/D");
+  _tree_out->Branch("pt_jpsi",&pt_jpsi,"data/D");
   _tree_out->Branch("theta_jpsi",&theta_jpsi,"data/D");
   _tree_out->Branch("eta_jpsi",&eta_jpsi,"data/D");
   _tree_out->Branch("phi_jpsi",&phi_jpsi,"data/D");
 
   _tree_out->Branch("p_je1",&p_je1,"data/D");
+  _tree_out->Branch("pt_je1",&pt_je1,"data/D");
   _tree_out->Branch("theta_je1",&theta_je1,"data/D");
   _tree_out->Branch("eta_je1",&eta_je1,"data/D");
   _tree_out->Branch("phi_je1",&phi_je1,"data/D");
 
   _tree_out->Branch("p_je2",&p_je2,"data/D");
+  _tree_out->Branch("pt_je2",&pt_je2,"data/D");
   _tree_out->Branch("theta_je2",&theta_je2,"data/D");
   _tree_out->Branch("eta_je2",&eta_je2,"data/D");
   _tree_out->Branch("phi_je2",&phi_je2,"data/D");
@@ -752,23 +762,28 @@ void Simulator::reset_event_variables()
   minv_beam = 0;
 
   p_e = 0;
+  pt_e = 0;
   theta_e = 0;
   phi_e = 0;
   eta_e = 0;
   p_p = 0;
+  pt_p = 0;
   theta_p = 0;
   phi_p = 0;
   eta_p = 0;
   p_jpsi = 0;
+  pt_jpsi = 0;
   theta_jpsi = 0;
   phi_jpsi = 0;
   eta_jpsi = 0;
 
   p_je1 = 0;
+  pt_je1 = 0;
   theta_je1 = 0;
   phi_je1 = 0;
   eta_je1 = 0;
   p_je2 = 0;
+  pt_je2 = 0;
   theta_je2 = 0;
   phi_je2 = 0;
   eta_je2 = 0;

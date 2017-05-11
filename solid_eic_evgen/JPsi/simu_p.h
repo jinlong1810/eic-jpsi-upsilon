@@ -79,23 +79,28 @@ class Simulator {
 
   /* final state particle properties in laboratory frame */
   Double_t p_e;
+  Double_t pt_e;
   Double_t theta_e;
   Double_t phi_e;
   Double_t eta_e;
   Double_t p_p;
+  Double_t pt_p;
   Double_t theta_p;
   Double_t phi_p;
   Double_t eta_p;
   Double_t p_jpsi;
+  Double_t pt_jpsi;
   Double_t theta_jpsi;
   Double_t phi_jpsi;
   Double_t eta_jpsi;
 
   Double_t p_je1;
+  Double_t pt_je1;
   Double_t theta_je1;
   Double_t phi_je1;
   Double_t eta_je1;
   Double_t p_je2;
+  Double_t pt_je2;
   Double_t theta_je2;
   Double_t phi_je2;
   Double_t eta_je2;
