@@ -1,4 +1,4 @@
-int plot_kinematics_eic()
+int plot_event_kinematics_eic()
 {
 
   TFile *fin = new TFile("../data/sim_te_b5GeV_p50GeV_mjpsi.root","OPEN");
