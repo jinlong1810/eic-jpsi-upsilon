@@ -1,5 +1,8 @@
 int plot_particle_kinematics_eic()
 {
+  float p_max = 55;
+  //  float p_max = 110;
+  //  float p_max = 270;
 
   TString fbase("sim_te_b5GeV_p50GeV_mjpsi");
   TString fname("../data/");
@@ -57,7 +60,7 @@ int plot_particle_kinematics_eic()
   /* Momentum vs Pseudorapidity - Electron*/
   a_th12f->Add( new TH2F( "h_e_p_vs_eta",
 			  "Scattered electron;#eta^{e'};p^{e'};",
-			  50,-10,10,50,0,55 ) );
+			  50,-10,10,50,0,p_max ) );
   T->Project( ((TH2F*)a_th12f->Last())->GetName(), "p_e:eta_e" );
 
   /* Transverse momentum vs Pseudorapidity - Electron*/
@@ -69,7 +72,7 @@ int plot_particle_kinematics_eic()
   /* Longitudinal momentum vs Pseudorapidity - Electron*/
   a_th12f->Add( new TH2F( "h_e_pl_vs_eta",
 			  "Scattered electron;#eta^{e'};p_{z}^{e'};",
-			  50,-10,10,50,0,55 ) );
+			  50,-10,10,50,0,p_max ) );
   T->Project( ((TH2F*)a_th12f->Last())->GetName(), "sqrt(p_e*p_e-pt_e*pt_e):eta_e" );
 
   /* Transverse momentum / momentum vs Pseudorapidity - Electron*/
@@ -81,13 +84,13 @@ int plot_particle_kinematics_eic()
   /* Momentum vs Pseudorapidity - Proton*/
   a_th12f->Add( new TH2F( "h_p_p_vs_eta",
 			  "Scattered proton;#eta^{p'};p^{p'};",
-			  50,-10,10,50,0,55 ) );
+			  50,-10,10,50,0,p_max ) );
   T->Project( ((TH2F*)a_th12f->Last())->GetName(), "p_p:eta_p" );
 
   /* Momentum vs Pseudorapidity - J/Psi*/
   a_th12f->Add( new TH2F( "h_jpsi_p_vs_eta",
 			  "JPsi;#eta^{J/#Psi};p^{J/#Psi};",
-			  50,-10,10,50,0,55 ) );
+			  50,-10,10,50,0,p_max ) );
   T->Project( ((TH2F*)a_th12f->Last())->GetName(), "p_jpsi:eta_jpsi" );
 
   /* Transverse momentum vs Pseudorapidity - J/Psi*/
@@ -99,7 +102,7 @@ int plot_particle_kinematics_eic()
   /* Longitudinal momentum vs Pseudorapidity - J/Psi*/
   a_th12f->Add( new TH2F( "h_jpsi_pl_vs_eta",
 			  "JPsi;#eta^{J/#Psi};p_{z}^{J/#Psi};",
-			  50,-10,10,50,0,55 ) );
+			  50,-10,10,50,0,p_max ) );
   T->Project( ((TH2F*)a_th12f->Last())->GetName(), "sqrt(p_jpsi*p_jpsi-pt_jpsi*pt_jpsi):eta_jpsi" );
 
   /* Transverse momentum / momentum vs Pseudorapidity - J/Psi*/
