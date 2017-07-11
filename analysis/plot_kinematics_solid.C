@@ -2,7 +2,7 @@
 
 int plot_kinematics_solid()
 {
-  TFile *fin = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_2M_accep.root","OPEN");
+  TFile *fin = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_v2_accep.root","OPEN");
   TTree *T = (TTree*)fin->Get("T");
 
   gROOT->SetStyle("Plain");

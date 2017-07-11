@@ -1,7 +1,8 @@
 int plot_event_kinematics_eic()
 {
 
-  TFile *fin = new TFile("../data/sim_te_b5GeV_p50GeV_mjpsi.root","OPEN");
+  //  TFile *fin = new TFile("../data/sim_te_b5GeV_p50GeV_mjpsi.root","OPEN");
+  TFile *fin = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_v2_accep.root","OPEN");
   TTree *T = (TTree*)fin->Get("T");
 
   //  gROOT->SetStyle("Plain");

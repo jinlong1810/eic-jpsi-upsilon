@@ -1,12 +1,27 @@
 
-
-double get_norm_solid_overall( TTree* T )
+double get_norm_solid_simulation( TTree* T )
 {
+  /* get simulation normalization factor */
+  Double_t phasespace;
+  T->SetBranchAddress("phasespace",&phasespace);
+  Int_t neve;
+  T->SetBranchAddress("neve",&neve);
+  T->GetEntry(T->GetEntries()-1);
+  cout << " throw events: " << neve << " , phasespace: " << phasespace << endl;
 
+  Double_t norm_simulation=phasespace/neve;
+  cout << "Norm simulation: " << norm_simulation << endl;
+  /* end get simulation normalization */
+
+  return norm_simulation;
+}
+
+double get_norm_solid_experiment( )
+{
   /* get experiment normalizaton */
   //Ebeam
   Double_t cov= 1e-9 * 1e-24; //nb to cm2 coversion
-  Double_t br = 5.94/100.;
+  Double_t br = 5.94/100.;  //Branching ratio: How often does J/Psi decay into e+e-?
   Double_t time = 50*3600*24;  //50 days in seconds
   Double_t eff = 0.85;
 
@@ -25,21 +40,47 @@ double get_norm_solid_overall( TTree* T )
   }
   /* end get experiment normalization */
 
+  return norm_experiment;
 
-  /* get simulation normalization factor */
-  Double_t phasespace;
-  T->SetBranchAddress("phasespace",&phasespace);
-  Int_t neve;
-  T->SetBranchAddress("neve",&neve);
-  T->GetEntry(T->GetEntries()-1);
-  cout << " throw events: " << neve << " , phasespace: " << phasespace << endl;
+}
 
-  Double_t norm_simulation=phasespace/neve;
-  cout << "Norm simulation: " << norm_simulation << endl;
-  /* end get simulation normalization */
+double get_norm_solid_overall( TTree* T )
+{
+  Double_t norm_experiment = get_norm_solid_experiment();
+
+  Double_t norm_simulation = get_norm_solid_simulation(T);
+
+  Double_t overall = norm_experiment*norm_simulation;
+
+  return overall;
+
+}
+
+/** EIC normalization */
+double get_norm_eic_overall( TTree* T )
+{
+
+  /* get experiment normalizaton */
+  //Ebeam
+  Double_t cov= 1e-9 * 1e-24; //nb to cm2 coversion (because lumi given in cm^-2s^-1 and cross section in nb)
+  Double_t br = 5.94/100.; //Branching ratio: How often does J/Psi decay into e+e-?
+  Double_t time = 50*3600*24;  //50 days in seconds
+  Double_t eff = 1.0;
+
+  Double_t lumi = 1.5e33;  // for which beam?
+
+  Double_t norm_experiment;
+
+  string type="e";
+  if (type=="e")  {
+    norm_experiment = cov * br * eff * time * lumi;
+    cout << "Norm experiment: " << norm_experiment << endl;
+  }
+  /* end get experiment normalization */
+
+  Double_t norm_simulation = get_norm_solid_simulation(T);
 
   Double_t overall=norm_experiment*norm_simulation;
 
   return overall;
-
 }
