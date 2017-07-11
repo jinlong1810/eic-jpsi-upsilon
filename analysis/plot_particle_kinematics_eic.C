@@ -4,7 +4,7 @@ int plot_particle_kinematics_eic()
   //  float p_max = 110;
   //  float p_max = 270;
 
-  TString fbase("sim_te_b5GeV_p50GeV_mjpsi");
+  TString fbase("sim_te_b20GeV_p50GeV_mjpsi");
   TString fname("../data/");
   fname+=fbase;
   fname+=".root";
