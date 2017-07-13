@@ -1,6 +1,6 @@
 #include "normalization.h"
 
-int plot_kinematics_solid()
+int plot_event_kinematics_solid()
 {
   TFile *fin = new TFile("../data/sim_te_b11GeV_p0GeV_mjpsi_v2_accep.root","OPEN");
   TTree *T = (TTree*)fin->Get("T");
@@ -38,7 +38,7 @@ int plot_kinematics_solid()
 
   TCanvas *c6_ul = new TCanvas();
   h_W_Q2->Draw("colz");
-  c6_ul->Print("new_solid_W_Q2.png");
+  c6_ul->Print("plots/new_solid_W_Q2.png");
 
   cscratch->cd();
 
@@ -57,7 +57,7 @@ int plot_kinematics_solid()
 
   TCanvas *c6_ll = new TCanvas();
   h_W_dt_3fold->Draw("colz");
-  c6_ll->Print("new_solid_W_dt_3fold.png");
+  c6_ll->Print("plots/new_solid_W_dt_3fold.png");
 
   cscratch->cd();
 
@@ -76,7 +76,7 @@ int plot_kinematics_solid()
 
   TCanvas *c6_lr = new TCanvas();
   h_W_dt_4fold->Draw("colz");
-  c6_lr->Print("new_solid_W_dt_4fold.png");
+  c6_lr->Print("plots/new_solid_W_dt_4fold.png");
 
   cscratch->cd();
 
@@ -105,7 +105,7 @@ int plot_kinematics_solid()
   h_W_t_3fold->Draw();
   g_W_tmin->Draw("Psame");
   g_W_tmax->Draw("Psame");
-  c6_ur_tmin->Print("new_solid_w_tmax_tmin_3fold.png");
+  c6_ur_tmin->Print("plots/new_solid_w_tmax_tmin_3fold.png");
 
   return 0;
 }
