@@ -27,7 +27,7 @@ int plot_crossection_solid()
   sprintf(accep_normal,"%s","(accep_je1_1+accep_je1_2)*(accep_je2_1+accep_je2_2)*(accep_e_1)*(accep_p_1+accep_p_2)");
 
   /* match factor to make cross section agree better with SOLID PAC 39 document- need to understand this and get rid of it! */
-  Double_t match_factor = 1./overall;
+  Double_t match_factor = 1.;///overall;
   Double_t overall_match = overall * match_factor;
 
   //  Double_t binwidth=0.2;
@@ -54,7 +54,8 @@ int plot_crossection_solid()
 
   T->Project("count_events","Keq",Form("dxs_2g*weight*weight_decay*%f",overall));
   T->Project("count_events_accep","Keq",Form("dxs_2g*weight*weight_decay*%s*%f",accep_normal,overall));
-  T->Project("count_events_accep_match","Keq",Form("dxs_2g*weight*weight_decay*%s*%f",accep_normal,overall_match));
+  //  T->Project("count_events_accep_match","Keq",Form("dxs_2g*weight*weight_decay*%s*%f",accep_normal,overall_match));
+  T->Project("count_events_accep_match","Keq",Form("dxs_2g*weight*weight_decay*%f",overall_match));
 
   T->Draw("dxs_2g : Keq >> xsec_xcheck","","prof");
 
@@ -94,10 +95,9 @@ int plot_crossection_solid()
   TCanvas *c3 = new TCanvas();
   xsec_xcheck->Draw("profs");
   xsec_xcheck->GetYaxis()->SetRangeUser(1e-11,1);
-  g_ref1->Draw("Psame");
   c3->SetLogx(1);
   c3->SetLogy(1);
-  //  c3->Print("xsection_solid_xcheck.png");
+  c3->Print("xsection_solid_xcheck.png");
 
   return 0;
 }
