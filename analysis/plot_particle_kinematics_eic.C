@@ -7,7 +7,7 @@ int plot_particle_kinematics_eic( bool detailed=false )
   //  float p_max = 270;
 
   //float Wmax=7; // J/psi production
-  float Wmax=1e6;//18; // Upsilon production
+  float Wmax=18; // Upsilon production
 
   TString fbase("sim_te_b5GeV_p50GeV_mjpsi");
   //TString fbase("sim_te_b5GeV_p50GeV_mupsilon");
