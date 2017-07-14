@@ -80,7 +80,10 @@ double get_norm_eic_overall( TTree* T )
 
   Double_t norm_simulation = get_norm_solid_simulation(T);
 
-  Double_t overall=norm_experiment*norm_simulation;
+  /* add arbitrary scaling to get number of entries per bin up in plots */
+  Double_t arbitrary_scaling = 1e6;
+
+  Double_t overall=norm_experiment*norm_simulation*arbitrary_scaling;
 
   return overall;
 }
