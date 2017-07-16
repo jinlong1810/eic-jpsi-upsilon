@@ -9,8 +9,8 @@ int plot_particle_kinematics_eic( bool detailed=false )
   //float Wmax=7; // J/psi production
   float Wmax=18; // Upsilon production
 
-  TString fbase("sim_te_b5GeV_p50GeV_mjpsi");
-  //TString fbase("sim_te_b5GeV_p50GeV_mupsilon");
+  //TString fbase("sim_te_b5GeV_p50GeV_mjpsi");
+  TString fbase("sim_te_b5GeV_p50GeV_mupsilon");
   //TString fbase("sim_te_b5GeV_p50GeV_mupsilon_Wmax20");
   TString fname("../data2/");
   fname+=fbase;
@@ -30,7 +30,7 @@ int plot_particle_kinematics_eic( bool detailed=false )
 
   /* Define acceptance */
   char acceptance_eicsphenix[200];
-  sprintf(acceptance_eicsphenix,"(W<%f)",Wmax);
+  sprintf(acceptance_eicsphenix,"( (W<%f) )",Wmax);
   cout << "Acceptance cut: " << acceptance_eicsphenix << endl;
 
   /* Define global weight */
