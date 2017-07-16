@@ -64,10 +64,10 @@ double get_norm_eic_overall( TTree* T )
   //Ebeam
   Double_t cov= 1e-9 * 1e-24; //nb to cm2 coversion (because lumi given in cm^-2s^-1 and cross section in nb)
   Double_t br = 5.94/100.; //Branching ratio: How often does J/Psi decay into e+e-?
-  Double_t time = 50*3600*24;  //50 days in seconds
+  Double_t time = 100*3600*24;  //100 days in seconds
   Double_t eff = 1.0;
 
-  Double_t lumi = 1.5e33;  // for which beam?
+  Double_t lumi = 1.0e33;  // for which beam?
 
   Double_t norm_experiment;
 
@@ -80,10 +80,10 @@ double get_norm_eic_overall( TTree* T )
 
   Double_t norm_simulation = get_norm_solid_simulation(T);
 
-  /* add arbitrary scaling to get number of entries per bin up in plots */
-  Double_t arbitrary_scaling = 1e6;
+  /* crossection scaling to match ratio J/psi / Uspilon cross section to existing collider data */
+  Double_t xsection_scaling = 0.0143;
 
-  Double_t overall=norm_experiment*norm_simulation*arbitrary_scaling;
+  Double_t overall=norm_experiment*norm_simulation*xsection_scaling;
 
   return overall;
 }
